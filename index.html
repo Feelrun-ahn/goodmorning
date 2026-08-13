@@ -137,12 +137,13 @@ section.col{display:flex;flex-direction:column;gap:14px;min-height:0}
 .lchip{padding:5px 11px;border-radius:999px;background:var(--chip);font-size:12px;color:var(--tx2)}
 .lchip.acc{background:var(--accSoft);color:var(--acc)}
 
-footer{position:relative;padding:16px 24px 15px;border-radius:22px;border:1px solid var(--bd);background:var(--card);backdrop-filter:blur(22px);display:flex;align-items:center;gap:22px;animation:rise .5s .32s ease both}
-.newshead{display:flex;flex-direction:column;gap:4px;min-width:120px}
+footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid var(--bd);background:var(--card);backdrop-filter:blur(22px);display:flex;flex-direction:column;gap:11px;animation:rise .5s .32s ease both}
+.newshead{display:flex;align-items:baseline;gap:12px;padding:0 20px}
 .newshead b{font-size:11px;letter-spacing:.24em;color:var(--acc);font-weight:400}
 .newshead button{padding:0;background:transparent;border:none;font-size:11px;color:var(--tx3);cursor:pointer;text-align:left}
-#newsList{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
-#newsList a{display:flex;flex-direction:column;gap:6px;padding-left:18px;border-left:2px solid var(--accBd)}
+/* 본문 3열과 같은 트랙 — 세로선이 위 카드 경계와 맞음 */
+#newsList{display:grid;grid-template-columns:1.24fr 1.02fr 1.06fr;gap:14px;margin:0 -1px}
+#newsList a{display:flex;flex-direction:column;gap:5px;padding-left:19px;border-left:2px solid var(--accBd)}
 #newsList .tag{font-size:11px;letter-spacing:.18em;color:var(--acc)}
 #newsList .tt{font-size:17px;line-height:1.4;color:var(--tx)}
 
@@ -574,7 +575,30 @@ function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i)
 function rng(seed){let s=seed>>>0||1;return()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296;};}
 const pickR=(r,a)=>a[Math.floor(r()*a.length)];
 
-const PROXIES=[u=>u,u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),u=>'https://corsproxy.io/?url='+encodeURIComponent(u)];
+const PROXIES=[
+  u=>u,
+  u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
+  u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u),
+  u=>'https://corsproxy.io/?url='+encodeURIComponent(u),
+  u=>'https://thingproxy.freeboard.io/fetch/'+u,
+  u=>'https://r.jina.ai/'+u
+];
+
+let LASTERR=[];
+async function fetchJSON(url){
+  const log=[];
+  for(let i=0;i<PROXIES.length;i++){
+    try{
+      const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),9000);
+      const r=await fetch(PROXIES[i](url),{signal:ac.signal}); clearTimeout(to);
+      if(!r.ok){ log.push(`${i}:HTTP${r.status}`); continue; }
+      const txt=await r.text();
+      try{ return JSON.parse(txt); }catch(e){ log.push(`${i}:형식오류(${txt.slice(0,40)})`); continue; }
+    }catch(e){ log.push(`${i}:${(e&&e.name)||'차단'}`); }
+  }
+  LASTERR=log;
+  return null;
+}
 
 /* ═════════ 날씨 ═════════ */
 const WICON=c=>c===0?'☀':c<=2?'⛅':c===3?'☁':c<=48?'≡':c<=67?'☂':c<=77?'❄':c<=82?'☂':'⚡';
@@ -648,18 +672,6 @@ function skyToCode(sky,pty){
   if(pty===1) return 63; if(pty===2) return 66; if(pty===3) return 73; if(pty===4) return 80;
   return sky===1?0:sky===3?2:3;
 }
-async function fetchJSON(url){
-  for(const p of PROXIES){
-    try{
-      const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),9000);
-      const r=await fetch(p(url),{signal:ac.signal}); clearTimeout(to);
-      if(!r.ok) continue;
-      const txt=await r.text();
-      try{ return JSON.parse(txt); }catch(e){ continue; }
-    }catch(e){}
-  }
-  return null;
-}
 async function loadKMA(){
   if(!C.kmaKey) return null;
   const g=dfsXY(C.lat,C.lon), b=kmaBase();
@@ -709,26 +721,28 @@ async function loadKMA(){
 async function loadGames(force){
   if(!force && C.games.length && Date.now()-C.gamesAt<6*3600000) return;
   const from=ymd(new Date(Date.now()-2*864e5)), to=ymd(new Date(Date.now()+45*864e5));
-  const url=`https://api-gw.sports.naver.com/schedule/games?upperCategoryId=kbaseball&fromDate=${from}&toDate=${to}&size=500`;
-  for(const p of PROXIES){
-    try{
-      const r=await fetch(p(url)); if(!r.ok) continue;
-      const j=await r.json();
-      const raw=(j.result&&(j.result.games||j.result.gameInfos))||j.games||[];
-      if(!raw.length) continue;
-      const T=g=>`${g.homeTeamName||''}${g.awayTeamName||''}${g.homeTeamCode||''}${g.awayTeamCode||''}`;
-      C.games=raw.filter(g=>/삼성|SS|SAM/.test(T(g))).map(g=>{
-        const d=String(g.gameDate||(g.gameDateTime||'').replace(/[-T:]/g,'').slice(0,8));
-        const home=/삼성|SS|SAM/.test(`${g.homeTeamName||''}${g.homeTeamCode||''}`);
-        return {date:`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`,
-          time:(g.gameDateTime||'').slice(11,16)||g.gameTime||'',
-          home, opp:(home?g.awayTeamName:g.homeTeamName)||'미정',
-          place:g.stadium||(home?'대구 라이온즈파크':''),
-          sp:(home?g.homeStarterName:g.awayStarterName)||'',
-          cancel:!!g.cancel};
-      }).sort((a,b)=>a.date.localeCompare(b.date));
-      C.gamesAt=Date.now(); C.gamesFail=false; save(); paint(); return;
-    }catch(e){}
+  const urls=[
+    `https://api-gw.sports.naver.com/schedule/games?upperCategoryId=kbaseball&categoryId=kbo&fromDate=${from}&toDate=${to}&size=500`,
+    `https://api-gw.sports.naver.com/schedule/games?upperCategoryId=kbaseball&fromDate=${from}&toDate=${to}&size=500`
+  ];
+  for(const url of urls){
+    const j=await fetchJSON(url);
+    if(!j) continue;
+    const raw=(j.result&&(j.result.games||j.result.gameInfos))||j.games||[];
+    if(!raw.length) continue;
+    const T=g=>`${g.homeTeamName||''}${g.awayTeamName||''}${g.homeTeamCode||''}${g.awayTeamCode||''}`;
+    const mine=raw.filter(g=>/삼성|SS|SAM/.test(T(g)));
+    C.games=mine.map(g=>{
+      const d=String(g.gameDate||(g.gameDateTime||'').replace(/[-T:]/g,'').slice(0,8));
+      const home=/삼성|SS|SAM/.test(`${g.homeTeamName||''}${g.homeTeamCode||''}`);
+      return {date:`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`,
+        time:(g.gameDateTime||'').slice(11,16)||g.gameTime||'',
+        home, opp:(home?g.awayTeamName:g.homeTeamName)||'미정',
+        place:g.stadium||(home?'대구 라이온즈파크':''),
+        sp:(home?g.homeStarterName:g.awayStarterName)||'',
+        cancel:!!g.cancel};
+    }).sort((a,b)=>a.date.localeCompare(b.date));
+    C.gamesAt=Date.now(); C.gamesFail=false; save(); paint(); return;
   }
   C.gamesFail=true; paint();
 }
@@ -931,7 +945,16 @@ function paint(){
   const nx=(C.games||[]).find(x=>x.date>ymd(now));
   if(!hasGame && nx) chips.push([`다음 ${nx.date.slice(5).replace('-','/')} · ${nx.home?nx.opp+' vs 삼성':'삼성 vs '+nx.opp} ${nx.place||''} ${nx.time}`,'']);
   $('lionsChips').innerHTML=chips.filter(c=>c[0].trim()).map(c=>`<span class="lchip ${c[1]}">${esc(c[0])}</span>`).join('');
-  $('lionsSrc').textContent=(m.opp?'수동 입력':(C.gamesFail&&!C.games.length?'자동 실패':'KBO 자동'))+' · 순위 ↗';
+  const failed=C.gamesFail&&!C.games.length;
+  $('lionsSrc').textContent=(m.opp?'수동 입력':(failed?'눌러서 다시 불러오기':'KBO 자동'))+' · 순위 ↗';
+  $('lionsSrc').style.cursor=failed?'pointer':'';
+  $('lionsSrc').onclick=failed?(e=>{
+    e.preventDefault(); e.stopPropagation();
+    $('lionsSrc').textContent='불러오는 중…';
+    loadGames(true).then(()=>{ if(C.gamesFail&&!C.games.length)
+      alert('경기 일정을 가져오지 못했습니다.\n\n시도 결과: '+(LASTERR.join(', ')||'알 수 없음')
+        +'\n\n설정에서 상대팀·시각·구장을 직접 넣으면 그 값이 표시됩니다.'); });
+  }):null;
 
   /* 명언 */
   const q=pickR(rng(hash((night?'nq':'qt')+ymd(now))), night?Q_NIGHT:Q_DAY);
