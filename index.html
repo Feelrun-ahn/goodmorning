@@ -101,19 +101,27 @@ section.col{display:flex;flex-direction:column;gap:14px;min-height:0}
 
 #fortuneCard{flex:1 1 auto;min-height:0;padding:18px 22px;border-radius:22px;border:1px solid var(--accBd);background:var(--cardAcc);backdrop-filter:blur(22px);display:flex;flex-direction:column;animation:rise .5s .2s ease both}
 .fscore{margin-top:10px;display:flex;align-items:baseline;gap:14px}
-.fscore b{font-weight:300;font-size:64px;line-height:.85;font-variant-numeric:tabular-nums}
+.fscore b{font-weight:300;font-size:72px;line-height:.85;font-variant-numeric:tabular-nums}
 .fscore i{font-size:22px;color:var(--tx2);font-style:normal}
-#fHeadline{margin:11px 0 0;font-size:15px;line-height:1.55}
-#fBars{margin-top:12px;display:flex;flex-direction:column;gap:7px}
+#fHeadline{margin:13px 0 0;font-size:16px;line-height:1.6}
+#fBadges{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+#fBadges span{font-size:11.5px;padding:4px 11px;border-radius:999px;border:1px solid var(--bd);color:var(--tx2)}
+#fBadges span.good{border-color:var(--accBd);background:var(--accSoft);color:var(--acc)}
+#fBadges span.warn{border-color:var(--violetBd);background:var(--violet);color:var(--violetTx)}
+#fAct{margin-top:14px;padding-top:13px;border-top:1px solid var(--bd);display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#fAct div{display:flex;flex-direction:column;gap:4px}
+#fAct i{font-size:10px;letter-spacing:.12em;color:var(--tx3);font-style:normal}
+#fAct b{font-size:14px;font-weight:400}
+#fBars{margin-top:16px;display:flex;flex-direction:column;gap:10px}
 .fbar{display:flex;align-items:center;gap:9px}
 .fbar span{width:30px;font-size:12px;color:var(--tx2)}
-.fbar .tr{flex:1;height:5px;border-radius:3px;background:var(--track);overflow:hidden}
+.fbar .tr{flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden}
 .fbar .fl{height:100%;border-radius:3px;background:var(--barFill)}
 .fbar b{width:22px;text-align:right;font-size:12px;color:var(--tx2);font-weight:400;font-variant-numeric:tabular-nums}
 #fLucky{margin-top:auto;padding-top:12px;border-top:1px solid var(--bd);display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 #fLucky div{display:flex;flex-direction:column;gap:3px}
 #fLucky i{font-size:10px;letter-spacing:.12em;color:var(--tx3);font-style:normal}
-#fLucky b{font-size:14px;color:var(--acc);font-weight:400}
+#fLucky b{font-size:15px;color:var(--acc);font-weight:400}
 
 #sleepCard{flex:0 0 auto;padding:16px 22px}
 .slnum{margin-top:8px;display:flex;align-items:baseline;gap:12px}
@@ -134,6 +142,13 @@ section.col{display:flex;flex-direction:column;gap:14px;min-height:0}
 #lionsCard{flex:0 0 auto;padding:16px 22px;border-radius:22px;border:1px solid var(--blueBd);background:var(--blue);backdrop-filter:blur(22px);display:block;animation:rise .5s .28s ease both}
 #lionsHeadline{margin-top:8px;font-size:24px}
 #lionsChips{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+#lionsRecent{margin-top:11px;padding-top:10px;border-top:1px solid var(--bd);display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+#lionsRecent .hd{font-size:10px;letter-spacing:.14em;color:var(--tx3)}
+#lionsRecent .g{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--tx2)}
+#lionsRecent .g b{font-weight:600;font-variant-numeric:tabular-nums}
+#lionsRecent .w{color:var(--acc)}
+#lionsRecent .l{color:var(--violetTx)}
+#lionsRecent .d{color:var(--tx3)}
 .lchip{padding:5px 11px;border-radius:999px;background:var(--chip);font-size:12px;color:var(--tx2)}
 .lchip.acc{background:var(--accSoft);color:var(--acc)}
 
@@ -144,6 +159,7 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
 /* 본문 3열과 같은 트랙 — 세로선이 위 카드 경계와 맞음 */
 #newsList{display:grid;grid-template-columns:1.24fr 1.02fr 1.06fr;gap:14px;margin:0 -1px}
 #newsList a{display:flex;flex-direction:column;gap:5px;padding-left:19px;border-left:2px solid var(--accBd)}
+#newsList .tt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:2.8em}
 #newsList .tag{font-size:11px;letter-spacing:.18em;color:var(--acc)}
 #newsList .tt{font-size:17px;line-height:1.4;color:var(--tx)}
 
@@ -283,17 +299,6 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
           </div>
           <div id="taskList"></div>
         </div>
-      </section>
-
-      <section class="col">
-        <div id="fortuneCard">
-          <div class="rowb"><span class="lab" style="color:var(--acc)" id="fortuneLabel">오늘의 운세</span><span class="mini" id="fortuneWho"></span></div>
-          <div class="fscore"><b id="fScore">--</b><i id="fGrade"></i></div>
-          <p id="fHeadline"></p>
-          <div id="fBars"></div>
-          <div id="fLucky"></div>
-        </div>
-
         <div class="card" id="sleepCard">
           <div class="rowb">
             <span class="lab" id="sleepLabelTop">수면 · XIAOMI WATCH</span>
@@ -306,7 +311,7 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
           <div id="sleepEmpty">
             <p id="sleepAsk">어젯밤 수면 점수가 아직 없습니다.</p>
             <div class="sleepact">
-              <a class="mibtn" href="intent://#Intent;package=com.mi.health;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.mi.health;end">Mi 피트니스 열기</a>
+              <a class="mibtn" href="intent://#Intent;package=com.mi.health;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.mi.health;end">기록 보러 가기</a>
               <input id="sleepNum" type="number" min="0" max="100" placeholder="점수" inputmode="numeric">
               <button id="sleepSave">기록</button>
             </div>
@@ -315,10 +320,24 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
           <input type="range" min="0" max="100" id="sleepRange">
         </div>
 
-        <a id="lionsCard" href="https://www.koreabaseball.com/TeamRank/TeamRank.aspx" target="_blank" rel="noopener">
+      </section>
+
+      <section class="col">
+        <div id="fortuneCard">
+          <div class="rowb"><span class="lab" style="color:var(--acc)" id="fortuneLabel">오늘의 운세</span><span class="mini" id="fortuneWho"></span></div>
+          <div class="fscore"><b id="fScore">--</b><i id="fGrade"></i></div>
+          <div id="fBadges"></div>
+          <p id="fHeadline"></p>
+          <div id="fBars"></div>
+          <div id="fAct"></div>
+          <div id="fLucky"></div>
+        </div>
+
+        <a id="lionsCard" href="https://m.sports.naver.com/kbaseball/record/index" target="_blank" rel="noopener">
           <div class="rowb"><span class="lab" style="color:var(--blueTx)">SAMSUNG LIONS</span><span class="mini" id="lionsSrc">KBO 순위 ↗</span></div>
           <div id="lionsHeadline">불러오는 중…</div>
           <div id="lionsChips"></div>
+          <div id="lionsRecent"></div>
         </a>
       </section>
     </main>
@@ -371,7 +390,7 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
 
 <script>
 /* ═════════ 저장 ═════════ */
-const BUILD='2026-08-13 · v5';
+const BUILD='2026-08-13 · v11';
 const KEY='morningBriefing.v4';
 let mem=null;
 const Store={
@@ -388,7 +407,7 @@ const Store={
 const DEF={
   name:'태현', birth:'2011-09-05', birthTime:'', wake:'', school:'08:00', bed:'23:00',
   lat:37.5271, lon:126.8656, place:'양천구 목동', kmaKey:'',
-  sleep:null, sleepIn:'', sleepOut:'', sleepHist:{},
+  sleep:null, sleepHist:{},
   todos:[], todosNext:[], ddays:[{label:'생일',date:'2026-09-05'}],
   tasks:[], lionsManual:{opp:'',time:'',place:'',sp:''}, lionsOff:false,
   syncProject:'', syncKey:'', syncCode:'taehyun-goodmorning', syncAt:0,
@@ -579,23 +598,26 @@ const pickR=(r,a)=>a[Math.floor(r()*a.length)];
 
 const PROXIES=[
   u=>u,
+  u=>'https://r.jina.ai/'+u,                                    // 실제로 통과하는 경로
   u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
   u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u),
-  u=>'https://corsproxy.io/?url='+encodeURIComponent(u),
-  u=>'https://thingproxy.freeboard.io/fetch/'+u,
-  u=>'https://r.jina.ai/'+u
+  u=>'https://corsproxy.io/?url='+encodeURIComponent(u)
 ];
 
-let LASTERR=[];
+let LASTERR=[], LASTSHAPE='', KMASRC='기상청', KMAERR=[];
 async function fetchJSON(url){
   const log=[];
   for(let i=0;i<PROXIES.length;i++){
     try{
-      const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),9000);
+      const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),13000);
       const r=await fetch(PROXIES[i](url),{signal:ac.signal}); clearTimeout(to);
       if(!r.ok){ log.push(`${i}:HTTP${r.status}`); continue; }
       const txt=await r.text();
-      try{ return JSON.parse(txt); }catch(e){ log.push(`${i}:형식오류(${txt.slice(0,40)})`); continue; }
+      try{ return JSON.parse(txt); }catch(e){}
+      // r.jina.ai 등은 본문을 텍스트로 감싸서 준다 — 안쪽 JSON만 꺼낸다
+      const s=txt.indexOf('{'), e2=txt.lastIndexOf('}');
+      if(s>=0&&e2>s){ try{ return JSON.parse(txt.slice(s,e2+1)); }catch(e3){} }
+      log.push(`${i}:형식오류(${txt.slice(0,40)})`);
     }catch(e){ log.push(`${i}:${(e&&e.name)||'차단'}`); }
   }
   LASTERR=log;
@@ -635,8 +657,9 @@ async function loadWeather(){
         C.wx[d]=Object.assign({},om,k[d],{uv:om.uv,sunrise:om.sunrise,sunset:om.sunset,
           hum:k[d].hum??om.hum, rain:k[d].rain??om.rain});
       });
-      C.wx.src='기상청';
-    } else if(k){ C.wx={today:k.today,tomorrow:k.tomorrow,at:Date.now(),src:'기상청'}; }
+      C.wx.src=KMASRC;
+    } else if(k){ C.wx={today:k.today,tomorrow:k.tomorrow,at:Date.now(),src:KMASRC}; }
+    else if(C.kmaKey && C.wx){ C.wx.src='Open-Meteo (기상청 실패)'; }
   }catch(e){}
   try{
     const a=await(await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${C.lat}&longitude=${C.lon}&current=pm10,pm2_5&timezone=Asia%2FSeoul`)).json();
@@ -677,12 +700,32 @@ function skyToCode(sky,pty){
 async function loadKMA(){
   if(!C.kmaKey) return null;
   const g=dfsXY(C.lat,C.lon), b=kmaBase();
-  const url='https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst'
-    +`?serviceKey=${encodeURIComponent(C.kmaKey)}&numOfRows=900&pageNo=1&dataType=JSON`
-    +`&base_date=${b.date}&base_time=${b.time}&nx=${g.nx}&ny=${g.ny}`;
-  const j=await fetchJSON(url);
-  const items=j&&j.response&&j.response.body&&j.response.body.items&&j.response.body.items.item;
-  if(!items||!items.length) return null;
+  const q=`numOfRows=900&pageNo=1&dataType=JSON&base_date=${b.date}&base_time=${b.time}&nx=${g.nx}&ny=${g.ny}`;
+  // Encoding 키(%2F·%3D 포함)와 Decoding 키를 모두 시도
+  const raw=C.kmaKey.trim();
+  const keys=[];
+  if(/%[0-9A-Fa-f]{2}/.test(raw)){                 // 이미 인코딩된 키
+    keys.push(raw);
+    try{ keys.push(encodeURIComponent(decodeURIComponent(raw))); }catch(e){}
+  } else {
+    keys.push(encodeURIComponent(raw), raw);
+  }
+  const urls=[];
+  keys.forEach(k=>{
+    urls.push(['기상청', `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${k}&${q}`]);
+    urls.push(['기상청 허브', `https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?authKey=${k}&${q}`]);
+  });
+  let items=null;
+  KMAERR=[];
+  for(const [src,u] of urls){
+    const j=await fetchJSON(u);
+    if(!j){ KMAERR.push(src+':응답없음'); continue; }
+    const hdr=j.response&&j.response.header;
+    const it=j.response&&j.response.body&&j.response.body.items&&j.response.body.items.item;
+    if(it&&it.length){ items=it; KMASRC=src; break; }
+    KMAERR.push(src+':'+((hdr&&(hdr.resultMsg||hdr.resultCode))||'항목없음'));
+  }
+  if(!items) return null;
   const byDay={};
   items.forEach(it=>{
     const d=it.fcstDate; byDay[d]=byDay[d]||{};
@@ -713,7 +756,7 @@ async function loadKMA(){
     return {hourly, temp:di===0?Math.round(+curT):Math.round(((hi??0)+(lo??0))/2),
       feels:di===0?Math.round(+curT):hi, hum:reh.length?Math.round(reh[0]):null,
       code:skyToCode(sky,pty), hi, lo, rain:pop.length?Math.max(...pop):null,
-      uv:null, sunrise:'', sunset:'', live:true, src:'기상청'};
+      uv:null, sunrise:'', sunset:'', live:true, src:KMASRC};
   };
   const today=build(0), tomorrow=build(1)||today;
   return today ? {today,tomorrow} : null;
@@ -722,16 +765,22 @@ async function loadKMA(){
 /* ═════════ KBO 자동 일정 ═════════ */
 async function loadGames(force){
   if(!force && C.games.length && Date.now()-C.gamesAt<6*3600000) return;
-  const from=ymd(new Date(Date.now()-2*864e5)), to=ymd(new Date(Date.now()+45*864e5));
+  const from=ymd(new Date(Date.now()-14*864e5)), to=ymd(new Date(Date.now()+45*864e5));
   const urls=[
     `https://api-gw.sports.naver.com/schedule/games?upperCategoryId=kbaseball&categoryId=kbo&fromDate=${from}&toDate=${to}&size=500`,
     `https://api-gw.sports.naver.com/schedule/games?upperCategoryId=kbaseball&fromDate=${from}&toDate=${to}&size=500`
   ];
+  const notes=[];
   for(const url of urls){
     const j=await fetchJSON(url);
-    if(!j) continue;
+    if(!j){ notes.push('응답없음('+LASTERR.join('/')+')'); continue; }
     const raw=(j.result&&(j.result.games||j.result.gameInfos))||j.games||[];
-    if(!raw.length) continue;
+    if(!raw.length){
+      notes.push('응답은 왔으나 경기 0건 · 최상위키=['+Object.keys(j).join(',')+']'
+        +(j.result?' result키=['+Object.keys(j.result).join(',')+']':''));
+      continue;
+    }
+    notes.push('경기 '+raw.length+'건 수신');
     const T=g=>`${g.homeTeamName||''}${g.awayTeamName||''}${g.homeTeamCode||''}${g.awayTeamCode||''}`;
     const mine=raw.filter(g=>/삼성|SS|SAM/.test(T(g)));
     C.games=mine.map(g=>{
@@ -742,11 +791,15 @@ async function loadGames(force){
         home, opp:(home?g.awayTeamName:g.homeTeamName)||'미정',
         place:g.stadium||(home?'대구 라이온즈파크':''),
         sp:(home?g.homeStarterName:g.awayStarterName)||'',
-        cancel:!!g.cancel};
+        cancel:!!g.cancel,
+        my:(home?g.homeTeamScore:g.awayTeamScore),
+        op:(home?g.awayTeamScore:g.homeTeamScore),
+        done:/END|RESULT|FINAL|종료/i.test(String(g.statusCode||g.statusInfo||''))};
     }).sort((a,b)=>a.date.localeCompare(b.date));
-    C.gamesAt=Date.now(); C.gamesFail=false; save(); paint(); return;
+    if(!mine.length){ notes.push('전체 '+raw.length+'건 중 삼성 경기 0건'); continue; }
+    C.gamesAt=Date.now(); C.gamesFail=false; LASTSHAPE=notes.join(' | '); save(); paint(); return;
   }
-  C.gamesFail=true; paint();
+  LASTSHAPE=notes.join(' | '); C.gamesFail=true; paint();
 }
 function todayGame(){
   const key=ymd(isNight()?new Date(now.getTime()+864e5):now);
@@ -765,7 +818,7 @@ async function loadNews(force){
   async function rss(url){
     for(const p of PROXIES.slice(1)){
       try{
-        const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),9000);
+        const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),13000);
         const r=await fetch(p(url),{signal:ac.signal}); clearTimeout(to);
         if(!r.ok) continue;
         const xml=new DOMParser().parseFromString(await r.text(),'text/xml');
@@ -841,6 +894,10 @@ function paint(){
   /* 날씨 */
   $('wxLabel').textContent = (C.place||'서울')+(night?' · 내일 날씨':' · 오늘 날씨');
   $('wxSource').textContent = (w.live?((C.wx&&C.wx.src)||'실시간'):'오프라인 값')+' · 네이버 날씨 ↗';
+  $('wxSource').onclick = (C.wx&&/실패/.test(C.wx.src||'')) ? (e=>{
+    e.preventDefault(); e.stopPropagation();
+    alert('기상청 요청 결과\n\n'+(KMAERR.join('\n')||'정보 없음')+'\n\n키를 다시 확인해 보세요.');
+  }) : null;
   $('wxIcon').textContent=WICON(w.code); $('wxDesc').textContent=WDESC(w.code);
   $('wxTemp').textContent=w.temp; $('wxFeels').textContent=w.feels;
   $('wxHi').textContent=w.hi; $('wxLo').textContent=w.lo;
@@ -887,6 +944,18 @@ function paint(){
     $('fScore').textContent=f.score; $('fGrade').textContent=grade;
     $('fHeadline').textContent=(night?'내일은 ':'')+SS_TEXT[f.ss]+(f.rel[2]?' '+f.rel[2]+'.':'')
       +(f.mun?' 문창귀인이 들어 암기와 글쓰기가 잘 붙습니다.':'')+(f.che?' 천을귀인이 들어 도와주는 사람이 붙습니다.':'');
+    $('fBadges').innerHTML=[
+      [f.ss,'good'],
+      f.rel[0]!=='평'?[f.rel[0],['육합','삼합'].includes(f.rel[0])?'good':'warn']:null,
+      f.mun?['문창귀인','good']:null,
+      f.che?['천을귀인','good']:null,
+      ['일간 '+GANH[f.me.dg]+f.A.me+' · '+(f.A.strong?'신강':'신약'),'']
+    ].filter(Boolean).map(x=>`<span class="${x[1]}">${x[0]}</span>`).join('');
+    $('fAct').innerHTML=[
+      ['오늘 할 일',SS_ACT[f.ss]],
+      ['좋은 시간',(f.goodTime||'—').split(',')[0]],
+      ['피할 시간',f.badTime||'—']
+    ].map(x=>`<div><i>${x[0]}</i><b>${x[1]}</b></div>`).join('');
     const bars=[['학업',f.study],['친구',f.rela],['건강',f.body],['행운',f.score]];
     $('fBars').innerHTML=bars.map(b=>`<div class="fbar"><span>${b[0]}</span><div class="tr"><div class="fl" style="width:${b[1]}%"></div></div><b>${b[1]}</b></div>`).join('');
     $('fLucky').innerHTML=[['행운의 색',f.color],['숫자',f.num.join('·')],['시간대',f.goodTime.split(',')[0]||'—'],['방향',f.dir]]
@@ -899,7 +968,6 @@ function paint(){
   const rec=hist.filter(v=>v!=null);
   const avg=rec.length?Math.round(rec.reduce((a,b)=>a+b,0)/rec.length):C.sleep;
   const diff=C.sleep-avg;
-  let dm=mins(C.sleepOut)-mins(C.sleepIn); if(dm<0) dm+=1440;
   let rb=mins(C.wake)-480; if(rb<0) rb+=1440;
   $('sleepLabelTop').textContent=night?'오늘 밤 · XIAOMI WATCH':'수면 · XIAOMI WATCH';
   const hasScore = C.sleep!=null;
@@ -909,12 +977,12 @@ function paint(){
   if(hasScore){
     $('sleepScore').textContent=C.sleep;
     const word=C.sleep>=85?'아주 좋음':C.sleep>=70?'양호':C.sleep>=55?'보통':'부족';
-    $('sleepMeta').textContent = (C.sleepIn&&C.sleepOut) ? `${word} · ${Math.floor(dm/60)}시간 ${dm%60}분` : word;
+    $('sleepMeta').textContent = word;
     $('sleepRange').value=C.sleep;
   } else {
     $('sleepAsk').textContent = night
       ? '오늘 밤 기록은 내일 아침에 워치에서 확인하세요.'
-      : '어젯밤 점수가 아직 없습니다. Mi 피트니스에서 확인하고 숫자만 옮겨 적으세요.';
+      : '어젯밤 점수가 아직 없습니다. 워치 기록을 보고 숫자만 옮겨 적으세요.';
   }
   $('sleepInsight').textContent = !hasScore
     ? (C.wake ? `8시간을 자려면 ${pad(Math.floor(rb/60))}:${pad(rb%60)}에는 누워야 해요.` : '')
@@ -924,7 +992,7 @@ function paint(){
     ? `8시간을 자려면 ${pad(Math.floor(rb/60))}:${pad(rb%60)}에는 누워야 해요. 최근 7일 평균 ${avg}점.`
     : (diff>=3?`7일 평균보다 ${diff}점 높아요. 오전 집중이 잘 되는 날입니다.`
       : diff<=-3?`7일 평균보다 ${Math.abs(diff)}점 낮아요. 오늘은 ${Math.max(15,Math.abs(diff)*5)}분 일찍 자 보세요.`
-      : `최근 흐름과 비슷합니다. 취침 시각 ${C.sleepIn}을 유지하세요.`);
+      : `최근 흐름과 비슷합니다. 지금 리듬을 유지하세요.`);
   $('sleepBars').innerHTML=hist.map((v,i)=>`<div class="${i===hist.length-1&&hasScore?'today':''}" style="height:${v==null?3:Math.max(4,Math.round(v*.3))}px;opacity:${v==null?.35:1}"></div>`).join('');
 
   /* 라이온즈 */
@@ -947,6 +1015,20 @@ function paint(){
   const nx=(C.games||[]).find(x=>x.date>ymd(now));
   if(!hasGame && nx) chips.push([`다음 ${nx.date.slice(5).replace('-','/')} · ${nx.home?nx.opp+' vs 삼성':'삼성 vs '+nx.opp} ${nx.place||''} ${nx.time}`,'']);
   $('lionsChips').innerHTML=chips.filter(c=>c[0].trim()).map(c=>`<span class="lchip ${c[1]}">${esc(c[0])}</span>`).join('');
+  // 최근 경기 결과
+  const past=(C.games||[]).filter(x=>x.date<ymd(now)&&x.my!=null&&x.op!=null&&!x.cancel).slice(-3);
+  if(past.length){
+    let w=0,l=0,d=0;
+    const cells=past.map(x=>{
+      const r=x.my>x.op?'승':x.my<x.op?'패':'무';
+      if(r==='승')w++; else if(r==='패')l++; else d++;
+      const cls=r==='승'?'w':r==='패'?'l':'d';
+      return `<span class="g">${x.date.slice(5).replace('-','/')} ${esc(x.opp)} <b class="${cls}">${x.my}:${x.op} ${r}</b></span>`;
+    }).join('');
+    $('lionsRecent').innerHTML=`<span class="hd">최근 ${past.length}경기</span>${cells}`
+      +`<span class="hd" style="margin-left:auto">${w}승${d?d+'무':''}${l}패</span>`;
+    $('lionsRecent').style.display='flex';
+  } else $('lionsRecent').style.display='none';
   const failed=C.gamesFail&&!C.games.length;
   $('lionsSrc').textContent=(m.opp?'수동 입력':(failed?'눌러서 다시 불러오기':'KBO 자동'))+' · 순위 ↗';
   $('lionsSrc').style.cursor=failed?'pointer':'';
@@ -954,7 +1036,8 @@ function paint(){
     e.preventDefault(); e.stopPropagation();
     $('lionsSrc').textContent='불러오는 중…';
     loadGames(true).then(()=>{ if(C.gamesFail&&!C.games.length)
-      alert('경기 일정을 가져오지 못했습니다.\n\n시도 결과: '+(LASTERR.join(', ')||'알 수 없음')
+      alert('경기 일정을 가져오지 못했습니다.\n\n[진단]\n'+(LASTSHAPE||'정보 없음')
+        +'\n\n프록시별: '+(LASTERR.join(', ')||'-')
         +'\n\n설정에서 상대팀·시각·구장을 직접 넣으면 그 값이 표시됩니다.'); });
   }):null;
 
@@ -1028,11 +1111,10 @@ $('shareTasks').onclick=()=>{
 const FIELDS=[
   ['이름','name','text'],['생년월일','birth','date'],['태어난 시각','birthTime','time'],
   ['앱 알람 (비우면 끔)','wake','time'],['등교 시각','school','time'],['목표 취침','bed','time'],
-  ['어제 취침','sleepIn','time'],['오늘 기상(워치)','sleepOut','time'],
   ['라이온즈 상대팀(수동)','L.opp','text'],['경기 시각(수동)','L.time','time'],
   ['구장(수동)','L.place','text'],['선발투수(수동)','L.sp','text'],
   ['지역 이름','place','text'],['위도','lat','number'],['경도','lon','number'],
-  ['기상청 API 키 (선택)','kmaKey','text'],
+  ['기상청 키 (포털/허브 아무거나)','kmaKey','text'],
   ['동기화 프로젝트 ID','syncProject','text'],['동기화 API 키','syncKey','text'],['동기화 코드','syncCode','text']
 ];
 function openSet(){
@@ -1268,6 +1350,7 @@ async function boot(){
   if(saved) C=Object.assign(JSON.parse(JSON.stringify(DEF)),saved);
   if(!C.lionsManual) C.lionsManual={opp:'',time:'',place:'',sp:''};
   importFromHash();
+  if(!(C.sleepHist||{})[ymd(new Date())]) C.sleep=null;   // 워치 점수는 매일 새로 적는 값
   rollover();
   fit(); addEventListener('resize',fit);
   paint();
