@@ -345,7 +345,8 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
         <div id="ddayEdit"></div>
         <p class="setnote">화면은 아침 5시부터 밝게, 저녁 18시부터 어둡게 자동으로 바뀝니다. 헤더의 버튼으로 직접 바꿀 수도 있어요.<br>라이온즈 경기는 KBO 일정에서 자동으로 가져옵니다. 아래 값을 채우면 그 값이 우선합니다(비우면 다시 자동).<br>
 기상청 API 키를 넣으면 네이버와 같은 기상청 예보를 씁니다(비우면 Open-Meteo). 앱 알람 칸을 비우면 앱 알람이 꺼지고, 헤더의 <b>기상 미션</b>으로만 실행됩니다.<br>
-동기화 3칸을 채우면 할 일·수행평가·D-day가 폰과 태블릿에서 같이 보입니다. 상태: <b id="syncState">사용 안 함</b></p>
+동기화 3칸을 채우면 할 일·수행평가·D-day가 폰과 태블릿에서 같이 보입니다. 상태: <b id="syncState">사용 안 함</b><br>
+빌드 <b id="buildTag"></b> · 이 값이 바뀌지 않으면 캐시가 남아 있는 것입니다.</p>
         <div class="setclose"><button id="setClose2">저장하고 닫기</button></div>
       </div>
     </div>
@@ -370,6 +371,7 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
 
 <script>
 /* ═════════ 저장 ═════════ */
+const BUILD='2026-08-13 · v5';
 const KEY='morningBriefing.v4';
 let mem=null;
 const Store={
@@ -1041,6 +1043,7 @@ function openSet(){
   $('lionsToggle').textContent=C.lionsOff?'경기 없음으로 표시 중 → 자동으로':'자동 일정 사용 중 → 경기 없음으로';
   $('ddayEdit').innerHTML=(C.ddays||[]).map((d,i)=>
     `<div><b>${esc(d.label)}</b><i>${d.date} · ${dtxt(dleft(d.date))}</i><button data-i="${i}">×</button></div>`).join('');
+  $('buildTag').textContent=BUILD;
   $('setOverlay').classList.add('show');
 }
 function closeSet(){
@@ -1283,7 +1286,21 @@ async function boot(){
   setInterval(()=>loadGames(false),3600000);
   setInterval(()=>loadNews(false),3600000);
   try{ if('wakeLock' in navigator) await navigator.wakeLock.request('screen'); }catch(e){}
-  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if('serviceWorker' in navigator){
+    try{
+      const reg=await navigator.serviceWorker.register('sw.js',{updateViaCache:'none'});
+      reg.update();
+      setInterval(()=>reg.update(), 30*60*1000);
+      reg.addEventListener('updatefound',()=>{
+        const w=reg.installing;
+        w && w.addEventListener('statechange',()=>{
+          if(w.state==='installed' && navigator.serviceWorker.controller){
+            w.postMessage('skipWaiting'); location.reload();
+          }
+        });
+      });
+    }catch(e){}
+  }
 }
 boot();
 </script>
