@@ -48,7 +48,7 @@ body.phone #stage{width:100%;height:auto;min-height:100dvh;transform:none!import
 body.phone #b1,body.phone #b2{width:420px;height:340px;filter:blur(70px)}
 body.phone header{flex-wrap:wrap;gap:10px}
 body.phone .greet{font-size:15px}
-body.phone #anchorLabel,body.phone #countdown,body.phone #modeBtn,body.phone #previewBtn{display:none}
+body.phone #countdown,body.phone #modeBtn,body.phone #previewBtn{display:none}
 body.phone main{display:flex;flex-direction:column;gap:12px}
 body.phone #clockCard,body.phone #wxCard,body.phone #quoteCard,
 body.phone #fortuneCard,body.phone #sleepCard,body.phone #lionsCard,
@@ -97,12 +97,16 @@ section.col{display:flex;flex-direction:column;gap:14px;min-height:0}
 .wxmain{margin-top:10px;display:flex;align-items:center;gap:20px}
 .wxicon{font-size:52px;line-height:1;color:var(--acc)}
 .wxtemp{font-weight:300;font-size:68px;line-height:.88}
+.wxtemp .lo2{color:var(--acc)}
+.wxtemp .hi2{}
+.wxtemp .sl{font-weight:200;color:var(--tx3);margin:0 6px;font-size:52px}
+.wxtemp.pair{font-size:56px}
 .wxcol{display:flex;flex-direction:column;gap:2px}
 .wxdesc{font-size:21px}
 .wxsub{font-size:14px;color:var(--tx2);white-space:nowrap}
 .wxstats{margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .wxstat{padding:9px 11px;border-radius:12px;background:var(--chip);display:flex;flex-direction:column;gap:2px}
-.wxstat i{font-size:10px;letter-spacing:.14em;color:var(--tx3);font-style:normal}
+.wxstat i{font-size:10px;letter-spacing:.1em;color:var(--tx3);font-style:normal;line-height:1.35}
 .wxstat b{font-size:16px;font-weight:400}
 .wxadvice{margin:12px 0 0;font-size:14px;line-height:1.55;color:var(--acc)}
 .hourly{margin-top:auto;padding-top:12px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;gap:6px}
@@ -280,7 +284,6 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
         <span class="greet" id="greeting"></span>
       </div>
       <div class="hactions">
-        <span class="pill" id="anchorLabel" style="cursor:default"></span>
         <span class="pill acc" id="countdown"></span>
         <button class="pill" id="modeBtn"></button>
         <button class="pill" id="previewBtn">기상 미션</button>
@@ -307,11 +310,11 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
           <div class="rowb"><span class="lab" id="wxLabel">SEOUL · 오늘 날씨</span><span class="mini" id="wxSource">불러오는 중 · 네이버 날씨 ↗</span></div>
           <div class="wxmain">
             <span class="wxicon" id="wxIcon">⛅</span>
-            <span class="wxtemp"><span id="wxTemp">--</span>°</span>
+            <span class="wxtemp" id="wxBig"><span id="wxTemp">--</span>°</span>
             <div class="wxcol">
               <span class="wxdesc" id="wxDesc">—</span>
-              <span class="wxsub">체감 <span id="wxFeels">--</span>°</span>
-              <span class="wxsub">최고 <span id="wxHi">--</span>° / 최저 <span id="wxLo">--</span>°</span>
+              <span class="wxsub" id="wxSub1"></span>
+              <span class="wxsub" id="wxSub2"></span>
             </div>
           </div>
           <div class="wxstats" id="wxStats"></div>
@@ -433,7 +436,7 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
 
 <script>
 /* ═════════ 저장 ═════════ */
-const BUILD='2026-08-14 · v17';
+const BUILD='2026-08-14 · v22';
 const KEY='morningBriefing.v4';
 let mem=null;
 const Store={
@@ -625,6 +628,8 @@ const THEME={
   '--scrim':'rgba(246,244,238,.82)','--modal':'linear-gradient(160deg,#ffffff,#f1eee6)','--alarmBg':'radial-gradient(70% 60% at 50% 34%,#fff6e4 0%,#f2ece0 72%)','--rootBg':'#f6f4ee'}
 };
 const isNight=()=> modeOverride ? modeOverride==='night' : (now.getHours()>=18||now.getHours()<5);
+// 밤 모드라도 자정을 넘으면(00~05시) "내일"이 곧 오늘이므로 오늘 데이터를 쓴다
+const dayOff=()=> (isNight() && now.getHours()>=18) ? 1 : 0;
 function applyTheme(){
   const t=THEME[isNight()?'night':'day'], r=document.documentElement.style;
   for(const k in t) r.setProperty(k,t[k]);
@@ -653,6 +658,42 @@ const PROXIES=[
 ];
 
 let LASTERR=[], LASTSHAPE='', KMASRC='기상청', KMAERR=[];
+function anyOf(ps){
+  return new Promise(function(res,rej){
+    var errs=[],n=0;
+    ps.forEach(function(p){ p.then(res,function(e){ errs.push(e); if(++n===ps.length) rej({errors:errs}); }); });
+  });
+}
+// 초단기실황 — 예보가 아닌 '관측값' (네이버 현재기온과 같은 원천)
+async function kmaNcst(keys, g){
+  const t=new Date(Date.now()-45*60000);          // 정시 발표 + 45분 여유
+  const bd=`${t.getFullYear()}${pad(t.getMonth()+1)}${pad(t.getDate())}`, bt=pad(t.getHours())+'00';
+  const q=`numOfRows=10&pageNo=1&dataType=JSON&base_date=${bd}&base_time=${bt}&nx=${g.nx}&ny=${g.ny}`;
+  const urls=[];
+  keys.forEach(k=>{
+    urls.push(`https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst?serviceKey=${k}&${q}`);
+    urls.push(`https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getUltraSrtNcst?authKey=${k}&${q}`);
+  });
+  const at=[];
+  for(const u of urls) for(let i=0;i<PROXIES.length;i++){
+    at.push((async()=>{
+      const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),10000);
+      try{
+        const r=await fetch(PROXIES[i](u),{signal:ac.signal}); clearTimeout(to);
+        if(!r.ok) throw 0;
+        const txt=await r.text(); let j=null;
+        try{ j=JSON.parse(txt); }catch(e){
+          const s=txt.indexOf('{'), e2=txt.lastIndexOf('}');
+          if(s>=0&&e2>s) j=JSON.parse(txt.slice(s,e2+1));
+        }
+        const it=j&&j.response&&j.response.body&&j.response.body.items&&j.response.body.items.item;
+        if(it&&it.length){ const o={}; it.forEach(x=>o[x.category]=x.obsrValue); return o; }
+        throw 0;
+      }catch(e){ clearTimeout(to); throw e; }
+    })());
+  }
+  try{ return await anyOf(at); }catch(e){ return null; }
+}
 async function fetchJSON(url){
   const log=[];
   for(let i=0;i<PROXIES.length;i++){
@@ -686,6 +727,11 @@ async function loadWeather(){
         if(j.hourly.temperature_2m[k]==null) break;
         hourly.push({t:pad((startH+i*step)%24)+'시',temp:Math.round(j.hourly.temperature_2m[k]),icon:WICON(j.hourly.weather_code[k])});
       }
+      const wetH=[];
+      for(let hh=0;hh<24;hh++){
+        const c=j.hourly.weather_code[base+hh];
+        if(c!=null && c>=51) wetH.push(hh);   // 51 이상 = 비·눈·소나기·뇌우
+      }
       return {hourly,
         temp:di===0?Math.round(j.current.temperature_2m):Math.round((j.daily.temperature_2m_max[1]+j.daily.temperature_2m_min[1])/2),
         feels:di===0?Math.round(j.current.apparent_temperature):Math.round(j.daily.temperature_2m_max[1]),
@@ -693,7 +739,7 @@ async function loadWeather(){
         code:di===0?j.current.weather_code:j.daily.weather_code[1],
         hi:Math.round(j.daily.temperature_2m_max[di]),lo:Math.round(j.daily.temperature_2m_min[di]),
         rain:j.daily.precipitation_probability_max[di],uv:Math.round(j.daily.uv_index_max[di]),
-        sunrise:(j.daily.sunrise[di]||'').slice(11),sunset:(j.daily.sunset[di]||'').slice(11),live:true};
+        sunrise:(j.daily.sunrise[di]||'').slice(11),sunset:(j.daily.sunset[di]||'').slice(11),live:true,wetH};
     };
     C.wx={today:build(0),tomorrow:build(1),at:Date.now(),src:'Open-Meteo'};
   }catch(e){}
@@ -703,10 +749,18 @@ async function loadWeather(){
       ['today','tomorrow'].forEach(d=>{
         const om=C.wx[d]||{};
         C.wx[d]=Object.assign({},om,k[d],{uv:om.uv,sunrise:om.sunrise,sunset:om.sunset,
+          feels:(om.feels!=null?om.feels:k[d].feels),
           hum:(k[d].hum!=null?k[d].hum:om.hum), rain:(k[d].rain!=null?k[d].rain:om.rain)});
       });
-      C.wx.src=KMASRC;
-    } else if(k){ C.wx={today:k.today,tomorrow:k.tomorrow,at:Date.now(),src:KMASRC}; }
+      if(k.ncst){
+        if(k.ncst.T1H!=null) C.wx.today.temp=Math.round(+k.ncst.T1H);
+        if(k.ncst.REH!=null) C.wx.today.hum=Math.round(+k.ncst.REH);
+        C.wx.src=KMASRC+' 실황';
+      } else C.wx.src=KMASRC;
+    } else if(k){
+      C.wx={today:k.today,tomorrow:k.tomorrow,at:Date.now(),src:KMASRC};
+      if(k.ncst&&k.ncst.T1H!=null){ C.wx.today.temp=Math.round(+k.ncst.T1H); C.wx.src=KMASRC+' 실황'; }
+    }
     else if(C.kmaKey && C.wx){ C.wx.src='Open-Meteo (기상청 실패)'; }
   }catch(e){}
   try{
@@ -717,7 +771,7 @@ async function loadWeather(){
 }
 const FALLBACK_WX={hourly:[['09시',27],['11시',29],['13시',31],['15시',30],['17시',28],['19시',26]].map(x=>({t:x[0],temp:x[1],icon:'⛅'})),
   temp:29,feels:32,hum:74,code:2,hi:31,lo:23,rain:20,uv:8,sunrise:'05:47',sunset:'19:26',live:false};
-const weather=()=> C.wx ? (isNight()?C.wx.tomorrow:C.wx.today) : FALLBACK_WX;
+const weather=()=> C.wx ? (dayOff()?C.wx.tomorrow:C.wx.today) : FALLBACK_WX;
 
 
 /* ═════════ 기상청 단기예보 (data.go.kr) ═════════
@@ -780,14 +834,6 @@ async function loadKMA(){
       }catch(e){ clearTimeout(to); throw typeof e==='string'?e:src+'/p'+i+':'+((e&&e.name)||'차단'); }
     })());
   }
-  function anyOf(ps){
-    return new Promise(function(res,rej){
-      var errs=[],n=0;
-      ps.forEach(function(p){
-        p.then(res,function(e){ errs.push(e); if(++n===ps.length) rej({errors:errs}); });
-      });
-    });
-  }
   let win=null;
   try{
     win=await anyOf(attempts);
@@ -796,6 +842,7 @@ async function loadKMA(){
     return null;
   }
   const items=win.items; KMASRC=win.src;
+  const ncst=await kmaNcst(keys, g);
   const byDay={};
   items.forEach(it=>{
     const d=it.fcstDate; byDay[d]=byDay[d]||{};
@@ -814,6 +861,12 @@ async function loadKMA(){
     const hi=tmx.length?Math.round(Math.max(...tmx)):(all.length?Math.round(Math.max(...all)):null);
     const lo=tmn.length?Math.round(Math.min(...tmn)):(all.length?Math.round(Math.min(...all)):null);
     const pop=nums(d.POP), reh=nums(d.REH);
+    // 비 오는 시간대: 강수형태(PTY)가 있거나 강수확률 60% 이상인 시각들
+    const wetH=[];
+    times.forEach(t=>{
+      const pv=+((d.POP||{})[t]||0), py=+((d.PTY||{})[t]||0);
+      if(py>0||pv>=60) wetH.push(+t.slice(0,2));
+    });
     const pickT=di===0?(times.find(t=>t>=nowHH)||times[0]):'1200';
     var _sk=(d.SKY||{})[pickT]; if(_sk==null)_sk=Object.values(d.SKY||{})[0]; if(_sk==null)_sk=1; const sky=_sk;
     var _pt=(d.PTY||{})[pickT]; const pty=_pt!=null?_pt:0;
@@ -827,10 +880,10 @@ async function loadKMA(){
     return {hourly, temp:di===0?Math.round(+curT):Math.round((((hi!=null?hi:0))+((lo!=null?lo:0)))/2),
       feels:di===0?Math.round(+curT):hi, hum:reh.length?Math.round(reh[0]):null,
       code:skyToCode(sky,pty), hi, lo, rain:pop.length?Math.max(...pop):null,
-      uv:null, sunrise:'', sunset:'', live:true, src:KMASRC};
+      uv:null, sunrise:'', sunset:'', live:true, src:KMASRC, wetH};
   };
   const today=build(0), tomorrow=build(1)||today;
-  return today ? {today,tomorrow} : null;
+  return today ? {today,tomorrow,ncst} : null;
 }
 
 /* ═════════ KBO 자동 일정 ═════════ */
@@ -852,7 +905,8 @@ async function loadGames(force){
         +(j.result?' result키=['+Object.keys(j.result).join(',')+']':''));
       continue;
     }
-    notes.push('경기 '+raw.length+'건 수신 (KBO만 필터 후 '+raw.filter(g=>{const c=String(g.categoryId||'').toLowerCase();return !c||c==='kbo';}).length+'건)');
+    const sd=raw[0]&&String(raw[0].gameDate||raw[0].gameDateTime||'');
+    notes.push('경기 '+raw.length+'건 수신 · 날짜형식예시 "'+(sd||'?').slice(0,19)+'" (KBO만 필터 후 '+raw.filter(g=>{const c=String(g.categoryId||'').toLowerCase();return !c||c==='kbo';}).length+'건)');
     const T=g=>`${g.homeTeamName||''}${g.awayTeamName||''}${g.homeTeamCode||''}${g.awayTeamCode||''}`;
     // KBO 1군만 — 퓨처스(2군)·시범경기 등 다른 카테고리 제외
     const isKbo=g=>{
@@ -861,7 +915,9 @@ async function loadGames(force){
     };
     const mine=raw.filter(g=>isKbo(g)&&/삼성|SS|SAM/.test(T(g)));
     C.games=mine.map(g=>{
-      const d=String(g.gameDate||(g.gameDateTime||'').replace(/[-T:]/g,'').slice(0,8));
+      // '20260814' / '2026-08-14' / '2026-08-14T18:30' 어떤 형식이든 숫자 8자리로 정규화
+      const d=String(g.gameDate||g.gameDateTime||'').replace(/\D/g,'').slice(0,8);
+      if(d.length<8) return null;
       const home=/삼성|SS|SAM/.test(`${g.homeTeamName||''}${g.homeTeamCode||''}`);
       return {date:`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`,
         time:(g.gameDateTime||'').slice(11,16)||g.gameTime||'',
@@ -872,14 +928,14 @@ async function loadGames(force){
         my:(home?g.homeTeamScore:g.awayTeamScore),
         op:(home?g.awayTeamScore:g.homeTeamScore),
         done:/END|RESULT|FINAL|종료/i.test(String(g.statusCode||g.statusInfo||''))};
-    }).sort((a,b)=>a.date.localeCompare(b.date));
+    }).filter(Boolean).sort((a,b)=>a.date.localeCompare(b.date));
     if(!mine.length){ notes.push('전체 '+raw.length+'건 중 삼성 경기 0건'); continue; }
     C.gamesAt=Date.now(); C.gamesFail=false; LASTSHAPE=notes.join(' | '); save(); paint(); return;
   }
   LASTSHAPE=notes.join(' | '); C.gamesFail=true; paint();
 }
 function todayGame(){
-  const key=ymd(isNight()?new Date(now.getTime()+864e5):now);
+  const key=ymd(dayOff()?new Date(now.getTime()+864e5):now);
   return (C.games||[]).find(g=>g.date===key);
 }
 
@@ -935,6 +991,22 @@ const Q_NIGHT=[['잠은 최고의 명상이다.','달라이 라마'],['오늘 �
  ['저녁이 되어서야 하루가 무슨 날이었는지 알 수 있다.','괴테'],['가장 어두운 시간은 해 뜨기 직전이다.','속담'],
  ['오늘의 나를 칭찬하고 자는 것도 실력이다.','—'],['내일 걱정은 내일의 몫으로 남겨 두자.','—']];
 
+/* 비 시간 목록 → '오후 2~6시' 요약 */
+function wetRanges(hs){
+  if(!hs||!hs.length) return '';
+  const s=[...new Set(hs)].sort((a,b)=>a-b), rs=[];
+  let a=s[0],p=s[0];
+  for(let i=1;i<=s.length;i++){
+    if(s[i]!=null && s[i]-p<=3){ p=s[i]; continue; }   // 예보가 3시간 간격이어도 이어진 것으로 묶기
+    rs.push([a,p]); a=s[i]; p=s[i];
+  }
+  const f=hh=>{
+    if(hh===0) return '자정'; if(hh===12) return '낮 12시';
+    return (hh<12?'오전 ':'오후 ')+(hh%12)+'시';
+  };
+  return rs.slice(0,2).map(([x,y])=>x===y?f(x):`${f(x)}~${f(y)}`.replace(/^(오전|오후) (\d+)시~\1 /,'$1 $2~')).join(', ');
+}
+
 /* ═════════ 렌더 ═════════ */
 function dleft(date){ return Math.ceil((new Date(date+'T00:00:00')-new Date(ymd(now)+'T00:00:00'))/86400000); }
 const dtxt=n=>n===0?'D-DAY':n>0?'D-'+n:'D+'+Math.abs(n);
@@ -949,9 +1021,16 @@ function paintClock(){
   const night=isNight(), nowM=h*60+now.getMinutes();
   let toBed=mins(C.bed)-nowM; if(toBed<0) toBed+=1440;
   const toSchool=mins(C.school)-nowM;
+  const lateNight = night && h<5;                       // 자정~새벽: 취침 시각은 이미 지남
   $('countdown').textContent = night
-    ? (toBed<=240 ? `취침까지 ${Math.floor(toBed/60)}시간 ${toBed%60}분` : '취침 '+C.bed)
-    : (toSchool>0 ? `등교까지 ${Math.floor(toSchool/60)}:${pad(toSchool%60)}` : '등교 시간 지남');
+    ? (lateNight
+        ? `취침 ${C.bed} 지남 · 얼른 주무세요`
+        : (toBed<=240
+            ? `취침 ${C.bed}까지 ${Math.floor(toBed/60)?Math.floor(toBed/60)+'시간 ':''}${toBed%60}분`
+            : `취침 목표 ${C.bed}`))
+    : (toSchool>0
+        ? `등교 ${C.school}까지 ${Math.floor(toSchool/60)?Math.floor(toSchool/60)+'시간 ':''}${toSchool%60}분`
+        : `등교 ${C.school} 지남`);
 }
 
 function paint(){
@@ -964,7 +1043,6 @@ function paint(){
     : pickR(rng(hash('g'+ymd(now))), h<9?['좋은 아침이에요','오늘도 잘 시작해 봐요','눈 뜬 것부터 성공이에요','오늘 컨디션은 어떤가요']
       : h<12?['오전이 지나가요','아직 오전이에요','반나절 남았어요']:['좋은 오후예요','오후도 힘내요']);
   $('greeting').textContent = gr + (C.name?', '+C.name:'');
-  $('anchorLabel').textContent = night ? '취침 '+C.bed : (C.wake?'기상 '+C.wake:'등교 '+C.school);
   $('modeBtn').textContent = night ? '☀ 아침 화면' : '☾ 밤 화면';
 
   $('ddayChips').innerHTML=(C.ddays||[]).slice()
@@ -972,39 +1050,49 @@ function paint(){
     .map((d,i)=>`<span class="ddchip" style="background:${i===0?'var(--violet)':'var(--chip)'};color:${i===0?'var(--violetTx)':'var(--tx2)'}">${dtxt(dleft(d.date))} ${esc(d.label)}</span>`).join('');
 
   /* 날씨 */
-  $('wxLabel').textContent = (C.place||'서울')+(night?' · 내일 날씨':' · 오늘 날씨');
+  $('wxLabel').textContent = (C.place||'서울')+(dayOff()?' · 내일 날씨':' · 오늘 날씨');
   $('wxSource').textContent = (w.live?((C.wx&&C.wx.src)||'실시간'):'오프라인 값')+' · 네이버 날씨 ↗';
   $('wxSource').onclick = (C.wx&&/실패/.test(C.wx.src||'')) ? (e=>{
     e.preventDefault(); e.stopPropagation();
     alert('기상청 요청 결과\n\n'+(KMAERR.join('\n')||'정보 없음')+'\n\n키를 다시 확인해 보세요.');
   }) : null;
   $('wxIcon').textContent=WICON(w.code); $('wxDesc').textContent=WDESC(w.code);
-  $('wxTemp').textContent=w.temp; $('wxFeels').textContent=w.feels;
-  $('wxHi').textContent=w.hi; $('wxLo').textContent=w.lo;
+  if(dayOff()){
+    // 내일: 최저/최고를 크게 — 평균값 같은 무의미한 숫자 대신
+    $('wxBig').classList.add('pair');
+    $('wxBig').innerHTML=`<span class="lo2">${w.lo}°</span><span class="sl">/</span><span class="hi2">${w.hi}°</span>`;
+    $('wxSub1').textContent='최저 / 최고';
+    $('wxSub2').textContent='강수확률 '+(w.rain!=null?w.rain:'—')+'%'+(wetRanges(w.wetH)?' · '+wetRanges(w.wetH):'');
+  } else {
+    $('wxBig').classList.remove('pair');
+    $('wxBig').innerHTML=`<span id="wxTemp">${w.temp}</span>°`;
+    $('wxSub1').textContent='체감 '+w.feels+'°';
+    $('wxSub2').textContent='최고 '+w.hi+'° / 최저 '+w.lo+'°';
+  }
   const gcol=v=>v==='좋음'?'var(--acc)':v==='보통'?'var(--tx)':'#e0794f';
   const st=[
     ['미세먼지', air.pm10+' '+pmLabel(air.pm10,false), gcol(pmLabel(air.pm10,false))],
     ['초미세먼지', air.pm25+' '+pmLabel(air.pm25,true), gcol(pmLabel(air.pm25,true))],
-    ['강수확률', (w.rain!=null?w.rain:'—')+'%', 'var(--tx)'],
+    ['강수확률'+(wetRanges(w.wetH)?' · '+wetRanges(w.wetH):''), (w.rain!=null?w.rain:'—')+'%', (w.rain>=60?'var(--acc)':'var(--tx)')],
     ['습도', w.hum+'%', 'var(--tx)'],
     ['자외선', (w.uv==null?'—':w.uv>=8?w.uv+' 매우높음':w.uv>=6?w.uv+' 높음':w.uv+' 보통'), 'var(--tx)'],
     [night?'일출':'일몰', (night?w.sunrise:w.sunset)||'—', 'var(--tx)']
   ];
   $('wxStats').innerHTML=st.map(s=>`<div class="wxstat"><i>${s[0]}</i><b style="color:${s[2]}">${s[1]}</b></div>`).join('');
   const t=w.temp;
-  $('wxAdvice').textContent = night
-    ? '내일 '+(w.rain>=50?'비 소식이 있어요. 우산을 미리 챙겨 두세요.':t>=28?'덥습니다. 반팔에 얇은 셔츠로 준비해 두세요.':t>=17?'선선합니다. 긴팔 한 벌 꺼내 두세요.':'쌀쌀합니다. 겉옷을 미리 걸어 두세요.')
-    : (t>=28?'반팔에 얇은 셔츠 한 장이면 충분합니다.':t>=23?'반팔, 저녁에는 가디건 한 장.':t>=17?'긴팔 셔츠가 적당합니다.':t>=10?'재킷은 꼭 챙기세요.':'코트와 목도리가 필요합니다.')+(w.rain>=50?' 우산을 챙기세요.':'');
+  $('wxAdvice').textContent = dayOff()
+    ? '내일 '+(w.rain>=50?(wetRanges(w.wetH)?wetRanges(w.wetH)+'에 비 소식이 있어요. 우산을 미리 챙겨 두세요.':'비 소식이 있어요. 우산을 미리 챙겨 두세요.'):t>=28?'덥습니다. 반팔에 얇은 셔츠로 준비해 두세요.':t>=17?'선선합니다. 긴팔 한 벌 꺼내 두세요.':'쌀쌀합니다. 겉옷을 미리 걸어 두세요.')
+    : (t>=28?'반팔에 얇은 셔츠 한 장이면 충분합니다.':t>=23?'반팔, 저녁에는 가디건 한 장.':t>=17?'긴팔 셔츠가 적당합니다.':t>=10?'재킷은 꼭 챙기세요.':'코트와 목도리가 필요합니다.')+(w.rain>=50?(wetRanges(w.wetH)?' '+wetRanges(w.wetH)+'에 비, 우산을 챙기세요.':' 우산을 챙기세요.'):'');
   $('hourly').innerHTML=w.hourly.map(x=>`<div class="hcell"><span class="t">${x.t}</span><span class="i">${x.icon}</span><span class="v">${x.temp}°</span></div>`).join('');
 
   /* 할 일 */
-  const list=night?(C.todosNext||[]):(C.todos||[]);
-  $('todoLabel').textContent=night?'내일 할 일':'오늘 할 일';
-  $('todoInput').placeholder=night?'내일 할 일을 적고 Enter':'할 일을 적고 Enter';
+  const list=dayOff()?(C.todosNext||[]):(C.todos||[]);
+  $('todoLabel').textContent=dayOff()?'내일 할 일':'오늘 할 일';
+  $('todoInput').placeholder=dayOff()?'내일 할 일을 적고 Enter':'할 일을 적고 Enter';
   $('todoCount').textContent=`${list.filter(x=>!x.done).length} / ${list.length}`;
   $('todoList').innerHTML=list.length?list.map((t2,i)=>
     `<div class="todo ${t2.done?'done':''}" data-i="${i}"><button class="ck" data-a="t"></button><span class="tx" data-a="t">${esc(t2.text)}</span><button class="rm" data-a="r">×</button></div>`).join('')
-    :`<div style="padding:14px 4px;font-size:14px;color:var(--tx3);line-height:1.6">${night?'내일 할 일을 적어 두면 아침에 자동으로 넘어옵니다.':'적어 둔 할 일이 없습니다.'}</div>`;
+    :`<div style="padding:14px 4px;font-size:14px;color:var(--tx3);line-height:1.6">${dayOff()?'내일 할 일을 적어 두면 아침에 자동으로 넘어옵니다.':'적어 둔 할 일이 없습니다.'}</div>`;
 
   /* 수행평가 */
   $('taskList').innerHTML=(C.tasks||[]).slice().sort((a,b)=>a.date.localeCompare(b.date)).map((a,i)=>{
@@ -1016,13 +1104,13 @@ function paint(){
   }).join('')||`<div style="padding:8px 2px;font-size:13px;color:var(--tx3)">등록된 수행평가가 없습니다. 추가를 눌러 넣어 두세요.</div>`;
 
   /* 운세 — 사주 계산 */
-  const fdate=new Date(now.getFullYear(),now.getMonth(),now.getDate()+(night?1:0));
+  const fdate=new Date(now.getFullYear(),now.getMonth(),now.getDate()+dayOff());
   let f=null; try{ f=fortune(C.birth,C.birthTime,fdate); }catch(e){}
-  $('fortuneLabel').textContent=night?'내일의 운세':'오늘의 운세';
+  $('fortuneLabel').textContent=dayOff()?'내일의 운세':'오늘의 운세';
   if(f){
     const grade=f.score>=90?'대길(大吉)':f.score>=75?'길(吉)':f.score>=62?'소길(小吉)':f.score>=52?'평(平)':'신중(愼)';
     $('fScore').textContent=f.score; $('fGrade').textContent=grade;
-    $('fHeadline').textContent=(night?'내일은 ':'')+SS_TEXT[f.ss]+(f.rel[2]?' '+f.rel[2]+'.':'')
+    $('fHeadline').textContent=(dayOff()?'내일은 ':'')+SS_TEXT[f.ss]+(f.rel[2]?' '+f.rel[2]+'.':'')
       +(f.mun?' 문창귀인이 들어 암기와 글쓰기가 잘 붙습니다.':'')+(f.che?' 천을귀인이 들어 도와주는 사람이 붙습니다.':'');
     $('fBadges').innerHTML=[
       [f.ss,'good'],
@@ -1084,7 +1172,7 @@ function paint(){
   // 뒤에 적힌 팀이 홈 — 원정 vs 홈
   $('lionsHeadline').textContent = hasGame
     ? (isHome ? `${opp} vs 삼성` : `삼성 vs ${opp}`)
-    : (C.games.length?(night?'내일은 경기가 없습니다':'오늘은 경기가 없습니다'):(C.gamesFail?'일정을 불러오지 못했습니다':'일정을 불러오는 중…'));
+    : (C.games.length?(dayOff()?'내일은 경기가 없습니다':'오늘은 경기가 없습니다'):(C.gamesFail?'일정을 불러오지 못했습니다':'일정을 불러오는 중…'));
   const chips=[];
   if(hasGame){
     if(pl) chips.push([(isHome?'홈 · ':'원정 · ')+pl,'acc']);
@@ -1096,7 +1184,11 @@ function paint(){
   if(!hasGame && nx) chips.push([`다음 ${nx.date.slice(5).replace('-','/')} · ${nx.home?nx.opp+' vs 삼성':'삼성 vs '+nx.opp} ${nx.place||''} ${nx.time}`,'']);
   $('lionsChips').innerHTML=chips.filter(c=>c[0].trim()).map(c=>`<span class="lchip ${c[1]}">${esc(c[0])}</span>`).join('');
   // 최근 경기 결과
-  const past=(C.games||[]).filter(x=>x.date<ymd(now)&&x.my!=null&&x.op!=null&&!x.cancel).slice(-3);
+  // 야구에 0:0은 없으므로, 상태코드가 종료이거나 득점 합이 0보다 큰 경기만 '끝난 경기'로 인정
+  const past=(C.games||[]).filter(x=>
+    x.date<ymd(now) && x.my!=null && x.op!=null && !x.cancel
+    && (x.done || (Number(x.my)+Number(x.op))>0)
+  ).slice(-3);
   if(past.length){
     let w=0,l=0,d=0;
     const cells=past.map(x=>{
@@ -1152,7 +1244,7 @@ function last7Sleep(){
 }
 
 /* ═════════ 할 일 / 수행평가 이벤트 ═════════ */
-function curKey(){ return isNight()?'todosNext':'todos'; }
+function curKey(){ return dayOff()?'todosNext':'todos'; }
 $('todoInput').addEventListener('keydown',e=>{
   if(e.key!=='Enter') return;
   const v=e.target.value.trim(); if(!v) return;
