@@ -224,7 +224,7 @@ footer{position:relative;padding:16px 24px 15px;border-radius:22px;border:1px so
         <span class="pill" id="anchorLabel" style="cursor:default"></span>
         <span class="pill acc" id="countdown"></span>
         <button class="pill" id="modeBtn"></button>
-        <button class="pill" id="previewBtn">알람 미리보기</button>
+        <button class="pill" id="previewBtn">기상 미션</button>
         <button class="pill" id="setBtn">설정</button>
       </div>
     </header>
@@ -243,7 +243,7 @@ footer{position:relative;padding:16px 24px 15px;border-radius:22px;border:1px so
           </div>
         </div>
 
-        <a class="card" id="wxCard" href="https://weather.naver.com/today/09140104" target="_blank" rel="noopener">
+        <a class="card" id="wxCard" href="https://weather.naver.com/today/09470102" id="wxLink" target="_blank" rel="noopener">
           <div class="rowb"><span class="lab" id="wxLabel">SEOUL · 오늘 날씨</span><span class="mini" id="wxSource">불러오는 중 · 네이버 날씨 ↗</span></div>
           <div class="wxmain">
             <span class="wxicon" id="wxIcon">⛅</span>
@@ -337,11 +337,13 @@ footer{position:relative;padding:16px 24px 15px;border-radius:22px;border:1px so
         <div class="fields" id="setFields"></div>
         <div class="setbtns">
           <button class="bt-blue" id="lionsToggle"></button>
+          <button class="bt-acc" id="geoBtn">현재 위치로 맞추기</button>
           <button class="bt-violet" id="addDdayBtn">D-day 추가</button>
           <button class="bt-acc" id="addTaskBtn2">수행평가 추가</button>
         </div>
         <div id="ddayEdit"></div>
         <p class="setnote">화면은 아침 5시부터 밝게, 저녁 18시부터 어둡게 자동으로 바뀝니다. 헤더의 버튼으로 직접 바꿀 수도 있어요.<br>라이온즈 경기는 KBO 일정에서 자동으로 가져옵니다. 아래 값을 채우면 그 값이 우선합니다(비우면 다시 자동).<br>
+기상청 API 키를 넣으면 네이버와 같은 기상청 예보를 씁니다(비우면 Open-Meteo). 앱 알람 칸을 비우면 앱 알람이 꺼지고, 헤더의 <b>기상 미션</b>으로만 실행됩니다.<br>
 동기화 3칸을 채우면 할 일·수행평가·D-day가 폰과 태블릿에서 같이 보입니다. 상태: <b id="syncState">사용 안 함</b></p>
         <div class="setclose"><button id="setClose2">저장하고 닫기</button></div>
       </div>
@@ -381,7 +383,8 @@ const Store={
   }
 };
 const DEF={
-  name:'태현', birth:'2011-09-05', birthTime:'', wake:'07:00', school:'08:00', bed:'23:00',
+  name:'태현', birth:'2011-09-05', birthTime:'', wake:'', school:'08:00', bed:'23:00',
+  lat:37.5271, lon:126.8656, place:'양천구 목동', kmaKey:'',
   sleep:null, sleepIn:'', sleepOut:'', sleepHist:{},
   todos:[], todosNext:[], ddays:[{label:'생일',date:'2026-09-05'}],
   tasks:[], lionsManual:{opp:'',time:'',place:'',sp:''}, lionsOff:false,
@@ -571,13 +574,15 @@ function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i)
 function rng(seed){let s=seed>>>0||1;return()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296;};}
 const pickR=(r,a)=>a[Math.floor(r()*a.length)];
 
+const PROXIES=[u=>u,u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),u=>'https://corsproxy.io/?url='+encodeURIComponent(u)];
+
 /* ═════════ 날씨 ═════════ */
 const WICON=c=>c===0?'☀':c<=2?'⛅':c===3?'☁':c<=48?'≡':c<=67?'☂':c<=77?'❄':c<=82?'☂':'⚡';
 const WDESC=c=>c===0?'맑음':c<=2?'구름 조금':c===3?'흐림':c<=48?'안개':c<=55?'이슬비':c<=67?'비':c<=77?'눈':c<=82?'소나기':'천둥번개';
 const pmLabel=(v,fine)=>{const t=fine?[15,35,75]:[30,80,150];return v<=t[0]?'좋음':v<=t[1]?'보통':v<=t[2]?'나쁨':'매우나쁨';};
 async function loadWeather(){
   try{
-    const j=await(await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.978&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code,uv_index_max,sunrise,sunset&timezone=Asia%2FSeoul&forecast_days=2')).json();
+    const j=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${C.lat}&longitude=${C.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code,uv_index_max,sunrise,sunset&timezone=Asia%2FSeoul&forecast_days=2`)).json();
     const build=di=>{
       const hourly=[], base=di*24, startH=di===0?new Date().getHours()+1:8, step=di===0?2:3;
       for(let i=0;i<6;i++){
@@ -594,10 +599,21 @@ async function loadWeather(){
         rain:j.daily.precipitation_probability_max[di],uv:Math.round(j.daily.uv_index_max[di]),
         sunrise:(j.daily.sunrise[di]||'').slice(11),sunset:(j.daily.sunset[di]||'').slice(11),live:true};
     };
-    C.wx={today:build(0),tomorrow:build(1),at:Date.now()};
+    C.wx={today:build(0),tomorrow:build(1),at:Date.now(),src:'Open-Meteo'};
   }catch(e){}
   try{
-    const a=await(await fetch('https://air-quality-api.open-meteo.com/v1/air-quality?latitude=37.5665&longitude=126.978&current=pm10,pm2_5&timezone=Asia%2FSeoul')).json();
+    const k=await loadKMA();
+    if(k&&C.wx){   // 기상청 값으로 덮어쓰되 자외선·일출입은 Open-Meteo 것 유지
+      ['today','tomorrow'].forEach(d=>{
+        const om=C.wx[d]||{};
+        C.wx[d]=Object.assign({},om,k[d],{uv:om.uv,sunrise:om.sunrise,sunset:om.sunset,
+          hum:k[d].hum??om.hum, rain:k[d].rain??om.rain});
+      });
+      C.wx.src='기상청';
+    } else if(k){ C.wx={today:k.today,tomorrow:k.tomorrow,at:Date.now(),src:'기상청'}; }
+  }catch(e){}
+  try{
+    const a=await(await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${C.lat}&longitude=${C.lon}&current=pm10,pm2_5&timezone=Asia%2FSeoul`)).json();
     if(C.wx) C.wx.air={pm10:Math.round(a.current.pm10),pm25:Math.round(a.current.pm2_5)};
   }catch(e){}
   save(); paint();
@@ -606,8 +622,90 @@ const FALLBACK_WX={hourly:[['09시',27],['11시',29],['13시',31],['15시',30],[
   temp:29,feels:32,hum:74,code:2,hi:31,lo:23,rain:20,uv:8,sunrise:'05:47',sunset:'19:26',live:false};
 const weather=()=> C.wx ? (isNight()?C.wx.tomorrow:C.wx.today) : FALLBACK_WX;
 
+
+/* ═════════ 기상청 단기예보 (data.go.kr) ═════════
+   설정에 기상청 API 키를 넣으면 네이버·기상청과 같은 값을 씁니다. */
+function dfsXY(lat,lon){
+  const RE=6371.00877,GRID=5.0,SLAT1=30.0,SLAT2=60.0,OLON=126.0,OLAT=38.0,XO=43,YO=136,D=Math.PI/180;
+  const re=RE/GRID,slat1=SLAT1*D,slat2=SLAT2*D,olon=OLON*D,olat=OLAT*D;
+  let sn=Math.tan(Math.PI*0.25+slat2*0.5)/Math.tan(Math.PI*0.25+slat1*0.5);
+  sn=Math.log(Math.cos(slat1)/Math.cos(slat2))/Math.log(sn);
+  let sf=Math.tan(Math.PI*0.25+slat1*0.5); sf=Math.pow(sf,sn)*Math.cos(slat1)/sn;
+  let ro=Math.tan(Math.PI*0.25+olat*0.5); ro=re*sf/Math.pow(ro,sn);
+  let ra=Math.tan(Math.PI*0.25+lat*D*0.5); ra=re*sf/Math.pow(ra,sn);
+  let th=lon*D-olon; if(th>Math.PI) th-=2*Math.PI; if(th<-Math.PI) th+=2*Math.PI; th*=sn;
+  return {nx:Math.floor(ra*Math.sin(th)+XO+0.5), ny:Math.floor(ro-ra*Math.cos(th)+YO+0.5)};
+}
+function kmaBase(){
+  const t=new Date(Date.now()-40*60000);       // 발표 후 40분 여유
+  const H=[2,5,8,11,14,17,20,23];
+  let h=-1; for(const x of H) if(t.getHours()>=x) h=x;
+  if(h<0){ t.setDate(t.getDate()-1); h=23; }
+  return {date:`${t.getFullYear()}${pad(t.getMonth()+1)}${pad(t.getDate())}`, time:pad(h)+'00'};
+}
+function skyToCode(sky,pty){
+  pty=+pty; sky=+sky;
+  if(pty===1) return 63; if(pty===2) return 66; if(pty===3) return 73; if(pty===4) return 80;
+  return sky===1?0:sky===3?2:3;
+}
+async function fetchJSON(url){
+  for(const p of PROXIES){
+    try{
+      const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),9000);
+      const r=await fetch(p(url),{signal:ac.signal}); clearTimeout(to);
+      if(!r.ok) continue;
+      const txt=await r.text();
+      try{ return JSON.parse(txt); }catch(e){ continue; }
+    }catch(e){}
+  }
+  return null;
+}
+async function loadKMA(){
+  if(!C.kmaKey) return null;
+  const g=dfsXY(C.lat,C.lon), b=kmaBase();
+  const url='https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst'
+    +`?serviceKey=${encodeURIComponent(C.kmaKey)}&numOfRows=900&pageNo=1&dataType=JSON`
+    +`&base_date=${b.date}&base_time=${b.time}&nx=${g.nx}&ny=${g.ny}`;
+  const j=await fetchJSON(url);
+  const items=j&&j.response&&j.response.body&&j.response.body.items&&j.response.body.items.item;
+  if(!items||!items.length) return null;
+  const byDay={};
+  items.forEach(it=>{
+    const d=it.fcstDate; byDay[d]=byDay[d]||{};
+    const k=it.category; byDay[d][k]=byDay[d][k]||{};
+    byDay[d][k][it.fcstTime]=it.fcstValue;
+  });
+  const days=Object.keys(byDay).sort();
+  const build=di=>{
+    const d=byDay[days[di]]; if(!d) return null;
+    const nums=o=>Object.values(o||{}).map(Number).filter(v=>!isNaN(v));
+    const tmp=d.TMP||{}, times=Object.keys(tmp).sort();
+    const nowHH=pad(new Date().getHours())+'00';
+    const curT=di===0 ? (tmp[times.find(t=>t>=nowHH)]??tmp[times[0]]) : null;
+    const tmx=nums(d.TMX), tmn=nums(d.TMN), all=nums(tmp);
+    const hi=tmx.length?Math.round(Math.max(...tmx)):(all.length?Math.round(Math.max(...all)):null);
+    const lo=tmn.length?Math.round(Math.min(...tmn)):(all.length?Math.round(Math.min(...all)):null);
+    const pop=nums(d.POP), reh=nums(d.REH);
+    const pickT=di===0?(times.find(t=>t>=nowHH)||times[0]):'1200';
+    const sky=(d.SKY||{})[pickT]??Object.values(d.SKY||{})[0]??1;
+    const pty=(d.PTY||{})[pickT]??0;
+    const hourly=[];
+    const start=di===0?times.findIndex(t=>t>=nowHH):0;
+    for(let i=Math.max(0,start);i<times.length&&hourly.length<6;i+=(di===0?2:3)){
+      const t=times[i];
+      hourly.push({t:t.slice(0,2)+'시',temp:Math.round(+tmp[t]),
+        icon:WICON(skyToCode((d.SKY||{})[t]??1,(d.PTY||{})[t]??0))});
+    }
+    return {hourly, temp:di===0?Math.round(+curT):Math.round(((hi??0)+(lo??0))/2),
+      feels:di===0?Math.round(+curT):hi, hum:reh.length?Math.round(reh[0]):null,
+      code:skyToCode(sky,pty), hi, lo, rain:pop.length?Math.max(...pop):null,
+      uv:null, sunrise:'', sunset:'', live:true, src:'기상청'};
+  };
+  const today=build(0), tomorrow=build(1)||today;
+  return today ? {today,tomorrow} : null;
+}
+
 /* ═════════ KBO 자동 일정 ═════════ */
-const PROXIES=[u=>u,u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),u=>'https://corsproxy.io/?url='+encodeURIComponent(u)];
 async function loadGames(force){
   if(!force && C.games.length && Date.now()-C.gamesAt<6*3600000) return;
   const from=ymd(new Date(Date.now()-2*864e5)), to=ymd(new Date(Date.now()+45*864e5));
@@ -641,29 +739,39 @@ function todayGame(){
 
 /* ═════════ 뉴스 ═════════ */
 const NEWS_SRC=[
-  {tag:'국내', topic:'NATION',  section:'https://news.naver.com/section/102'},
-  {tag:'세계', topic:'WORLD',   section:'https://news.naver.com/section/104'},
-  {tag:'과학', topic:'SCIENCE', section:'https://news.naver.com/section/105'}
+  {tag:'국내', topic:'NATION',  q:'속보 한국',      section:'https://news.naver.com/section/102'},
+  {tag:'세계', topic:'WORLD',   q:'국제 정세',      section:'https://news.naver.com/section/104'},
+  {tag:'과학', topic:'SCIENCE', q:'과학 기술 연구', section:'https://news.naver.com/section/105'}
 ];
 async function loadNews(force){
   if(!force && C.news && Date.now()-C.newsAt<3*3600000) return;
   $('newsRefresh').textContent='불러오는 중…';
-  const out=[];
-  for(const s of NEWS_SRC){
-    let got=null;
-    const rss=`https://news.google.com/rss/headlines/section/topic/${s.topic}?hl=ko&gl=KR&ceid=KR:ko`;
+  async function rss(url){
     for(const p of PROXIES.slice(1)){
       try{
-        const r=await fetch(p(rss)); if(!r.ok) continue;
+        const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),9000);
+        const r=await fetch(p(url),{signal:ac.signal}); clearTimeout(to);
+        if(!r.ok) continue;
         const xml=new DOMParser().parseFromString(await r.text(),'text/xml');
-        const it=xml.querySelector('item');
-        if(it){ got={tag:s.tag, text:(it.querySelector('title')?.textContent||'').replace(/\s+-\s+[^-]+$/,''), url:it.querySelector('link')?.textContent||s.section}; break; }
+        const it=xml.querySelector('item'); if(!it) continue;
+        const title=(it.querySelector('title')||{}).textContent||'';
+        if(!title.trim()) continue;
+        return {text:title.replace(/\s+-\s+[^-]+$/,'').trim(),
+                url:((it.querySelector('link')||{}).textContent||'').trim()};
       }catch(e){}
     }
-    out.push(got||{tag:s.tag,text:'뉴스를 불러오지 못했습니다. 라벨을 눌러 다시 시도하세요.',url:s.section});
+    return null;
   }
+  const out=await Promise.all(NEWS_SRC.map(async s=>{
+    const base='https://news.google.com/rss';
+    let got=await rss(`${base}/headlines/section/topic/${s.topic}?hl=ko&gl=KR&ceid=KR:ko`);
+    if(!got) got=await rss(`${base}/search?q=${encodeURIComponent(s.q)}&hl=ko&gl=KR&ceid=KR:ko`);
+    return got ? {tag:s.tag,text:got.text,url:got.url||s.section}
+               : {tag:s.tag,text:'헤드라인을 불러오지 못했습니다. 눌러서 네이버 뉴스로 이동.',url:s.section};
+  }));
   C.news=out; C.newsAt=Date.now(); save();
-  $('newsRefresh').textContent=out.some(x=>x.url.includes('news.naver'))?'일부 실패 · 다시 시도':'방금 갱신됨';
+  const fail=out.filter(x=>x.url.includes('news.naver')).length;
+  $('newsRefresh').textContent = fail? `${fail}건 실패 · 다시 시도` : '방금 갱신됨 · 다시 시도';
   paint();
 }
 
@@ -707,7 +815,7 @@ function paint(){
     : pickR(rng(hash('g'+ymd(now))), h<9?['좋은 아침이에요','오늘도 잘 시작해 봐요','눈 뜬 것부터 성공이에요','오늘 컨디션은 어떤가요']
       : h<12?['오전이 지나가요','아직 오전이에요','반나절 남았어요']:['좋은 오후예요','오후도 힘내요']);
   $('greeting').textContent = gr + (C.name?', '+C.name:'');
-  $('anchorLabel').textContent = night ? '취침 '+C.bed : '기상 '+C.wake;
+  $('anchorLabel').textContent = night ? '취침 '+C.bed : (C.wake?'기상 '+C.wake:'등교 '+C.school);
   $('modeBtn').textContent = night ? '☀ 아침 화면' : '☾ 밤 화면';
 
   $('ddayChips').innerHTML=(C.ddays||[]).slice()
@@ -715,8 +823,8 @@ function paint(){
     .map((d,i)=>`<span class="ddchip" style="background:${i===0?'var(--violet)':'var(--chip)'};color:${i===0?'var(--violetTx)':'var(--tx2)'}">${dtxt(dleft(d.date))} ${esc(d.label)}</span>`).join('');
 
   /* 날씨 */
-  $('wxLabel').textContent = night?'SEOUL · 내일 날씨':'SEOUL · 오늘 날씨';
-  $('wxSource').textContent = (w.live?'실시간':'오프라인 값')+' · 네이버 날씨 ↗';
+  $('wxLabel').textContent = (C.place||'서울')+(night?' · 내일 날씨':' · 오늘 날씨');
+  $('wxSource').textContent = (w.live?((C.wx&&C.wx.src)||'실시간'):'오프라인 값')+' · 네이버 날씨 ↗';
   $('wxIcon').textContent=WICON(w.code); $('wxDesc').textContent=WDESC(w.code);
   $('wxTemp').textContent=w.temp; $('wxFeels').textContent=w.feels;
   $('wxHi').textContent=w.hi; $('wxLo').textContent=w.lo;
@@ -726,8 +834,8 @@ function paint(){
     ['초미세먼지', air.pm25+' '+pmLabel(air.pm25,true), gcol(pmLabel(air.pm25,true))],
     ['강수확률', w.rain+'%', 'var(--tx)'],
     ['습도', w.hum+'%', 'var(--tx)'],
-    ['자외선', (w.uv>=8?w.uv+' 매우높음':w.uv>=6?w.uv+' 높음':w.uv+' 보통'), 'var(--tx)'],
-    [night?'일출':'일몰', night?w.sunrise:w.sunset, 'var(--tx)']
+    ['자외선', (w.uv==null?'—':w.uv>=8?w.uv+' 매우높음':w.uv>=6?w.uv+' 높음':w.uv+' 보통'), 'var(--tx)'],
+    [night?'일출':'일몰', (night?w.sunrise:w.sunset)||'—', 'var(--tx)']
   ];
   $('wxStats').innerHTML=st.map(s=>`<div class="wxstat"><i>${s[0]}</i><b style="color:${s[2]}">${s[1]}</b></div>`).join('');
   const t=w.temp;
@@ -894,10 +1002,12 @@ $('shareTasks').onclick=()=>{
 /* ═════════ 설정 ═════════ */
 const FIELDS=[
   ['이름','name','text'],['생년월일','birth','date'],['태어난 시각','birthTime','time'],
-  ['기상 알람','wake','time'],['등교 시각','school','time'],['목표 취침','bed','time'],
+  ['앱 알람 (비우면 끔)','wake','time'],['등교 시각','school','time'],['목표 취침','bed','time'],
   ['어제 취침','sleepIn','time'],['오늘 기상(워치)','sleepOut','time'],
   ['라이온즈 상대팀(수동)','L.opp','text'],['경기 시각(수동)','L.time','time'],
   ['구장(수동)','L.place','text'],['선발투수(수동)','L.sp','text'],
+  ['지역 이름','place','text'],['위도','lat','number'],['경도','lon','number'],
+  ['기상청 API 키 (선택)','kmaKey','text'],
   ['동기화 프로젝트 ID','syncProject','text'],['동기화 API 키','syncKey','text'],['동기화 코드','syncCode','text']
 ];
 function openSet(){
@@ -913,13 +1023,25 @@ function openSet(){
 function closeSet(){
   $('setFields').querySelectorAll('input').forEach(inp=>{
     const k=inp.dataset.k, v=inp.value;
-    if(k.startsWith('L.')) C.lionsManual[k.slice(2)]=v; else C[k]=v;
+    if(k.startsWith('L.')) C.lionsManual[k.slice(2)]=v;
+    else if(k==='lat'||k==='lon') C[k]=parseFloat(v)||DEF[k];
+    else C[k]=v;
   });
   save(); $('setOverlay').classList.remove('show'); paint();
+  C.wx=null; loadWeather();
   if(syncOn()) syncPull();
 }
 $('setBtn').onclick=openSet; $('setClose1').onclick=closeSet; $('setClose2').onclick=closeSet;
 $('lionsToggle').onclick=()=>{ C.lionsOff=!C.lionsOff; save(); openSet(); paint(); };
+$('geoBtn').onclick=()=>{
+  if(!navigator.geolocation) return alert('이 기기에서는 위치를 쓸 수 없어요.');
+  $('geoBtn').textContent='찾는 중…';
+  navigator.geolocation.getCurrentPosition(p=>{
+    C.lat=+p.coords.latitude.toFixed(4); C.lon=+p.coords.longitude.toFixed(4);
+    save(); openSet(); $('geoBtn').textContent='현재 위치로 맞췄어요';
+    C.wx=null; loadWeather();
+  },()=>{ $('geoBtn').textContent='위치를 못 찾았어요'; },{timeout:8000});
+};
 $('addDdayBtn').onclick=()=>{
   const label=prompt('D-day 이름'); if(!label) return;
   const date=prompt('날짜 (YYYY-MM-DD)', ymd(new Date())); if(!date) return;
@@ -1130,7 +1252,7 @@ async function boot(){
     paintClock();
     if(now.getSeconds()===0) paint();
     const hm=pad(now.getHours())+':'+pad(now.getMinutes());
-    if(!alarmOn && C.wake===hm && C.dismissed!==ymd(now) && firedAt!==ymd(now)+' '+hm){ firedAt=ymd(now)+' '+hm; startAlarm(); }
+    if(!alarmOn && C.wake && C.wake===hm && C.dismissed!==ymd(now) && firedAt!==ymd(now)+' '+hm){ firedAt=ymd(now)+' '+hm; startAlarm(); }
     if(!alarmOn && snoozeAt && Date.now()>=snoozeAt){ snoozeAt=null; startAlarm(); }
     if(now.getHours()===0 && now.getMinutes()===0 && now.getSeconds()<2){ rollover(); paint(); }
   },1000);
