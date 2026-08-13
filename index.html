@@ -390,7 +390,7 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
 
 <script>
 /* ═════════ 저장 ═════════ */
-const BUILD='2026-08-13 · v11';
+const BUILD='2026-08-13 · v12';
 const KEY='morningBriefing.v4';
 let mem=null;
 const Store={
@@ -406,7 +406,8 @@ const Store={
 };
 const DEF={
   name:'태현', birth:'2011-09-05', birthTime:'', wake:'', school:'08:00', bed:'23:00',
-  lat:37.5271, lon:126.8656, place:'양천구 목동', kmaKey:'',
+  lat:37.5271, lon:126.8656, place:'양천구 목동',
+  kmaKey:'bCjXJ8p0rSCp1qYp%2Fyfl%2B%2FtrCNpFc0hhGCGLglIVNU17IoC9FtwNXFCWHyFFSvUnPJMoHZhCFS%2Bw8%2BNRZsBugw%3D%3D',
   sleep:null, sleepHist:{},
   todos:[], todosNext:[], ddays:[{label:'생일',date:'2026-09-05'}],
   tasks:[], lionsManual:{opp:'',time:'',place:'',sp:''}, lionsOff:false,
@@ -701,31 +702,45 @@ async function loadKMA(){
   if(!C.kmaKey) return null;
   const g=dfsXY(C.lat,C.lon), b=kmaBase();
   const q=`numOfRows=900&pageNo=1&dataType=JSON&base_date=${b.date}&base_time=${b.time}&nx=${g.nx}&ny=${g.ny}`;
-  // Encoding 키(%2F·%3D 포함)와 Decoding 키를 모두 시도
   const raw=C.kmaKey.trim();
-  const keys=[];
-  if(/%[0-9A-Fa-f]{2}/.test(raw)){                 // 이미 인코딩된 키
-    keys.push(raw);
-    try{ keys.push(encodeURIComponent(decodeURIComponent(raw))); }catch(e){}
-  } else {
-    keys.push(encodeURIComponent(raw), raw);
-  }
+  const keys=[...new Set(
+    /%[0-9A-Fa-f]{2}/.test(raw) ? [raw] : [encodeURIComponent(raw), raw]
+  )];
   const urls=[];
   keys.forEach(k=>{
     urls.push(['기상청', `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${k}&${q}`]);
     urls.push(['기상청 허브', `https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?authKey=${k}&${q}`]);
   });
-  let items=null;
+  // 모든 (주소 × 프록시) 조합을 동시에 쏘고 먼저 성공한 응답을 쓴다
   KMAERR=[];
-  for(const [src,u] of urls){
-    const j=await fetchJSON(u);
-    if(!j){ KMAERR.push(src+':응답없음'); continue; }
-    const hdr=j.response&&j.response.header;
-    const it=j.response&&j.response.body&&j.response.body.items&&j.response.body.items.item;
-    if(it&&it.length){ items=it; KMASRC=src; break; }
-    KMAERR.push(src+':'+((hdr&&(hdr.resultMsg||hdr.resultCode))||'항목없음'));
+  const attempts=[];
+  for(const [src,u] of urls) for(let i=0;i<PROXIES.length;i++){
+    attempts.push((async()=>{
+      const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),12000);
+      try{
+        const r=await fetch(PROXIES[i](u),{signal:ac.signal}); clearTimeout(to);
+        if(!r.ok) throw src+'/p'+i+':HTTP'+r.status;
+        const txt=await r.text();
+        let j=null;
+        try{ j=JSON.parse(txt); }catch(e){
+          const s=txt.indexOf('{'), e2=txt.lastIndexOf('}');
+          if(s>=0&&e2>s) j=JSON.parse(txt.slice(s,e2+1));
+        }
+        const it=j&&j.response&&j.response.body&&j.response.body.items&&j.response.body.items.item;
+        if(it&&it.length) return {items:it, src};
+        const hdr=j&&j.response&&j.response.header;
+        throw src+'/p'+i+':'+((hdr&&(hdr.resultMsg||hdr.resultCode))||'항목없음');
+      }catch(e){ clearTimeout(to); throw typeof e==='string'?e:src+'/p'+i+':'+((e&&e.name)||'차단'); }
+    })());
   }
-  if(!items) return null;
+  let win=null;
+  try{
+    win=await Promise.any(attempts);
+  }catch(agg){
+    KMAERR=(agg&&agg.errors||[]).map(String).slice(0,10);
+    return null;
+  }
+  const items=win.items; KMASRC=win.src;
   const byDay={};
   items.forEach(it=>{
     const d=it.fcstDate; byDay[d]=byDay[d]||{};
@@ -1349,6 +1364,7 @@ async function boot(){
   const saved=await Store.load();
   if(saved) C=Object.assign(JSON.parse(JSON.stringify(DEF)),saved);
   if(!C.lionsManual) C.lionsManual={opp:'',time:'',place:'',sp:''};
+  if(!C.kmaKey) C.kmaKey=DEF.kmaKey;
   importFromHash();
   if(!(C.sleepHist||{})[ymd(new Date())]) C.sleep=null;   // 워치 점수는 매일 새로 적는 값
   rollover();
