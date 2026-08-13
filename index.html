@@ -123,6 +123,12 @@ section.col{display:flex;flex-direction:column;gap:14px;min-height:0}
 #sleepBars div{flex:1;border-radius:4px;background:var(--barIdle)}
 #sleepBars div.today{background:var(--acc)}
 #sleepInsight{display:block;margin-top:7px;font-size:12px;color:var(--tx2)}
+#sleepEmpty{display:none}
+#sleepAsk{margin:10px 0 0;font-size:14px;line-height:1.5;color:var(--tx2)}
+.sleepact{margin-top:10px;display:flex;gap:7px;align-items:center}
+.mibtn{padding:9px 14px;border-radius:11px;border:1px solid var(--accBd);background:var(--accSoft);font-size:13px;color:var(--acc);white-space:nowrap}
+.sleepact input{width:74px;padding:9px 10px;border-radius:11px;border:1px solid var(--bd2);background:var(--chip);font-size:14px;color:var(--tx);text-align:center}
+.sleepact button{padding:9px 14px;border-radius:11px;border:1px solid var(--bd2);background:var(--chip);font-size:13px;color:var(--tx2);cursor:pointer}
 #sleepRange{width:100%;margin-top:6px;accent-color:var(--acc)}
 
 #lionsCard{flex:0 0 auto;padding:16px 22px;border-radius:22px;border:1px solid var(--blueBd);background:var(--blue);backdrop-filter:blur(22px);display:block;animation:rise .5s .28s ease both}
@@ -292,8 +298,18 @@ footer{position:relative;padding:16px 24px 15px;border-radius:22px;border:1px so
             <span class="lab" id="sleepLabelTop">수면 · XIAOMI WATCH</span>
             <a href="intent://#Intent;package=com.mi.health;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.mi.health;end" style="font-size:11px;color:var(--acc)">Mi 피트니스 ↗</a>
           </div>
-          <div class="slnum"><b id="sleepScore">--</b><i><span id="sleepWord"></span> · <span id="sleepDur"></span></i></div>
-          <div id="sleepBars"></div>
+          <div id="sleepFull">
+            <div class="slnum"><b id="sleepScore">--</b><i id="sleepMeta"></i></div>
+            <div id="sleepBars"></div>
+          </div>
+          <div id="sleepEmpty">
+            <p id="sleepAsk">어젯밤 수면 점수가 아직 없습니다.</p>
+            <div class="sleepact">
+              <a class="mibtn" href="intent://#Intent;package=com.mi.health;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.mi.health;end">Mi 피트니스 열기</a>
+              <input id="sleepNum" type="number" min="0" max="100" placeholder="점수" inputmode="numeric">
+              <button id="sleepSave">기록</button>
+            </div>
+          </div>
           <span id="sleepInsight"></span>
           <input type="range" min="0" max="100" id="sleepRange">
         </div>
@@ -366,7 +382,7 @@ const Store={
 };
 const DEF={
   name:'태현', birth:'2011-09-05', birthTime:'', wake:'07:00', school:'08:00', bed:'23:00',
-  sleep:78, sleepIn:'23:48', sleepOut:'06:30', sleepHist:{},
+  sleep:null, sleepIn:'', sleepOut:'', sleepHist:{},
   todos:[], todosNext:[], ddays:[{label:'생일',date:'2026-09-05'}],
   tasks:[], lionsManual:{opp:'',time:'',place:'',sp:''}, lionsOff:false,
   syncProject:'', syncKey:'', syncCode:'taehyun-goodmorning', syncAt:0,
@@ -762,18 +778,30 @@ function paint(){
   let dm=mins(C.sleepOut)-mins(C.sleepIn); if(dm<0) dm+=1440;
   let rb=mins(C.wake)-480; if(rb<0) rb+=1440;
   $('sleepLabelTop').textContent=night?'오늘 밤 · XIAOMI WATCH':'수면 · XIAOMI WATCH';
-  $('sleepScore').textContent=C.sleep;
-  $('sleepWord').textContent=C.sleep>=85?'아주 좋음':C.sleep>=70?'양호':C.sleep>=55?'보통':'부족';
-  $('sleepDur').textContent=`${Math.floor(dm/60)}시간 ${dm%60}분`;
-  $('sleepInsight').textContent = rec.length<2
+  const hasScore = C.sleep!=null;
+  $('sleepFull').style.display=hasScore?'block':'none';
+  $('sleepEmpty').style.display=hasScore?'none':'block';
+  $('sleepRange').style.display=hasScore?'block':'none';
+  if(hasScore){
+    $('sleepScore').textContent=C.sleep;
+    const word=C.sleep>=85?'아주 좋음':C.sleep>=70?'양호':C.sleep>=55?'보통':'부족';
+    $('sleepMeta').textContent = (C.sleepIn&&C.sleepOut) ? `${word} · ${Math.floor(dm/60)}시간 ${dm%60}분` : word;
+    $('sleepRange').value=C.sleep;
+  } else {
+    $('sleepAsk').textContent = night
+      ? '오늘 밤 기록은 내일 아침에 워치에서 확인하세요.'
+      : '어젯밤 점수가 아직 없습니다. Mi 피트니스에서 확인하고 숫자만 옮겨 적으세요.';
+  }
+  $('sleepInsight').textContent = !hasScore
+    ? (C.wake ? `8시간을 자려면 ${pad(Math.floor(rb/60))}:${pad(rb%60)}에는 누워야 해요.` : '')
+    : rec.length<2
     ? `며칠 기록이 쌓이면 평균과 비교해 드릴게요. 8시간을 자려면 ${pad(Math.floor(rb/60))}:${pad(rb%60)}에 누우세요.`
     : night
     ? `8시간을 자려면 ${pad(Math.floor(rb/60))}:${pad(rb%60)}에는 누워야 해요. 최근 7일 평균 ${avg}점.`
     : (diff>=3?`7일 평균보다 ${diff}점 높아요. 오전 집중이 잘 되는 날입니다.`
       : diff<=-3?`7일 평균보다 ${Math.abs(diff)}점 낮아요. 오늘은 ${Math.max(15,Math.abs(diff)*5)}분 일찍 자 보세요.`
       : `최근 흐름과 비슷합니다. 취침 시각 ${C.sleepIn}을 유지하세요.`);
-  $('sleepBars').innerHTML=hist.map((v,i)=>`<div class="${i===hist.length-1?'today':''}" style="height:${v==null?3:Math.max(4,Math.round(v*.3))}px;opacity:${v==null?.35:1}"></div>`).join('');
-  $('sleepRange').value=C.sleep;
+  $('sleepBars').innerHTML=hist.map((v,i)=>`<div class="${i===hist.length-1&&hasScore?'today':''}" style="height:${v==null?3:Math.max(4,Math.round(v*.3))}px;opacity:${v==null?.35:1}"></div>`).join('');
 
   /* 라이온즈 */
   const g=todayGame(), m=C.lionsManual||{};
@@ -823,7 +851,7 @@ function last7Sleep(){
   const out=[];
   for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i);
     const v=(C.sleepHist||{})[ymd(d)];
-    out.push(i===0 ? C.sleep : (v==null?null:v)); }
+    out.push(i===0 ? (C.sleep==null?null:C.sleep) : (v==null?null:v)); }
   return out;
 }
 
@@ -902,12 +930,14 @@ $('ddayEdit').addEventListener('click',e=>{
   C.ddays.splice(+e.target.dataset.i,1); save(); openSet(); paint(); syncSoon();
 });
 $('modeBtn').onclick=()=>{ modeOverride=isNight()?'day':'night'; paint(); };
-$('sleepRange').addEventListener('input',e=>{
-  C.sleep=parseInt(e.target.value,10);
-  C.sleepHist=C.sleepHist||{}; C.sleepHist[ymd(new Date())]=C.sleep;
-  save(); paint();
-});
+$('sleepRange').addEventListener('input',e=>saveSleep(parseInt(e.target.value,10)));
 $('newsRefresh').onclick=()=>loadNews(true);
+function saveSleep(v){
+  if(isNaN(v)||v<0||v>100) return;
+  C.sleep=v; C.sleepHist=C.sleepHist||{}; C.sleepHist[ymd(new Date())]=v; save(); paint();
+}
+$('sleepSave').onclick=()=>saveSleep(parseInt($('sleepNum').value,10));
+$('sleepNum').addEventListener('keydown',e=>{ if(e.key==='Enter') saveSleep(parseInt(e.target.value,10)); });
 
 
 /* ═════════ 클라우드 동기화 (Firestore REST) ═════════
