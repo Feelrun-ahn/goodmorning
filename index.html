@@ -40,26 +40,89 @@ a{text-decoration:none;color:inherit}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 
-/* ── 폰 모드: 할 일 + 수행평가만 ── */
-body.phone{overflow:auto}
-body.phone #root{position:static;display:block;height:auto;overflow:visible}
+/* ── 폰 모드 ── */
+body.phone{overflow-x:hidden}
+body.phone #root{position:static;display:block;height:auto;overflow:hidden}
 body.phone #stage{width:100%;height:auto;min-height:100dvh;transform:none!important;
-  display:flex;flex-direction:column;gap:12px;padding:16px 14px 24px}
-body.phone #b1,body.phone #b2{width:420px;height:340px;filter:blur(70px)}
-body.phone header{flex-wrap:wrap;gap:10px}
-body.phone .greet{font-size:15px}
-body.phone #countdown,body.phone #modeBtn,body.phone #previewBtn{display:none}
-body.phone main{display:flex;flex-direction:column;gap:12px}
+  display:flex;flex-direction:column;gap:11px;padding:14px 12px 28px}
+body.phone #b1{width:360px;height:280px;left:-110px;top:-70px;filter:blur(60px)}
+body.phone #b2{width:340px;height:280px;right:-110px;bottom:-50px;filter:blur(60px)}
+body.phone header{flex-wrap:wrap;gap:8px}
+body.phone .brandwrap{gap:9px;width:100%}
+body.phone .brand{font-size:9.5px;letter-spacing:.2em}
+body.phone .greet{font-size:14px}
+body.phone .hactions{width:100%;gap:6px;flex-wrap:wrap}
+body.phone .pill{padding:6px 11px;font-size:11.5px}
+body.phone #previewBtn{display:none}
+body.phone main{display:flex;flex-direction:column;gap:11px}
+body.phone section.col{display:contents}
+body.phone .card,body.phone #taskCard,body.phone #fortuneCard,body.phone #lionsCard{padding:15px 16px}
+/* 간단히 보기 */
 body.phone #clockCard,body.phone #wxCard,body.phone #quoteCard,
 body.phone #fortuneCard,body.phone #sleepCard,body.phone #lionsCard,
 body.phone footer{display:none}
-body.phone section.col{display:contents}
-body.phone #todoCard{flex:none;min-height:340px}
-body.phone #todoList{max-height:44dvh}
-body.phone.showall #clockCard,body.phone.showall #wxCard,body.phone.showall #quoteCard,
-body.phone.showall #fortuneCard,body.phone.showall #sleepCard,body.phone.showall #lionsCard,
-body.phone.showall footer{display:flex}
-body.phone.showall #lionsCard,body.phone.showall #quoteCard{display:block}
+body.phone #todoCard{flex:none;min-height:320px}
+body.phone #todoList{max-height:46dvh}
+/* 전체 보기 */
+/* 원래 block인 카드는 block으로 되돌려야 세로 배치가 깨지지 않음 */
+body.phone.showall #wxCard,body.phone.showall #fortuneCard,body.phone.showall footer{display:flex}
+body.phone.showall #clockCard,body.phone.showall #sleepCard,
+body.phone.showall #quoteCard,body.phone.showall #lionsCard{display:block}
+/* 수면 카드: 숫자·그래프 세로로 */
+body.phone .sleepwrap{flex-direction:column;align-items:stretch;gap:10px}
+body.phone .spark{height:40px;width:100%;padding-bottom:14px}
+body.phone .ss{display:none}
+body.phone.showall #todoCard{min-height:230px}
+body.phone.showall #todoList{max-height:32dvh}
+body.phone .hhmm{font-size:60px}
+body.phone .clock .sep{font-size:50px}
+body.phone .cbot{flex-direction:column;align-items:flex-start;gap:8px}
+body.phone .ddchips{justify-content:flex-start}
+body.phone .datefull{font-size:15px}
+body.phone .wxmain{gap:12px;align-items:center}
+body.phone .wxicon{font-size:38px}
+body.phone .wxtemp{font-size:50px}
+body.phone .wxtemp.pair{font-size:38px}
+body.phone .wxtemp .sl{font-size:32px;margin:0 3px}
+body.phone .wxdesc{font-size:17px}
+body.phone .wxsub{font-size:12.5px}
+body.phone .wxstats{gap:6px}
+body.phone .wxstat{padding:8px}
+body.phone .wxstat i{font-size:9px;letter-spacing:.04em}
+body.phone .wxstat b{font-size:13.5px}
+body.phone .wxadvice{font-size:13px}
+body.phone .hourly{gap:2px}
+body.phone .hcell .t{font-size:10px}
+body.phone .hcell .v{font-size:13.5px}
+body.phone #fortuneCard{flex:none}
+body.phone .fscore b{font-size:52px}
+body.phone #fHeadline{font-size:14px}
+body.phone #fBadges span{font-size:10.5px;padding:3px 9px}
+body.phone #fAct b{font-size:12.5px}
+body.phone #fLucky{grid-template-columns:1fr 1fr;gap:8px 10px}
+body.phone #lionsHeadline{font-size:21px}
+body.phone #lionsRecent{gap:6px}
+body.phone #lionsRecent .g{font-size:11.5px}
+body.phone #lionsRecent .hd{width:100%;margin:0!important}
+body.phone #sleepCard{flex:none}
+body.phone .slnum b{font-size:38px}
+body.phone .sleepact{flex-wrap:wrap}
+body.phone footer{flex-direction:column;padding:14px 16px;gap:10px}
+body.phone .newshead{padding:0}
+body.phone #newsList{grid-template-columns:1fr;gap:11px;margin:0}
+body.phone #newsList .tt{font-size:15px;height:auto;-webkit-line-clamp:3}
+body.phone .sheet{padding:12px}
+body.phone #setBox{padding:18px 16px;max-height:92dvh}
+body.phone .fields,body.phone .two,body.phone .three{grid-template-columns:1fr;gap:11px}
+/* 폰에서는 페이지가 길어지므로 오버레이를 화면에 고정 */
+body.phone #alarm,body.phone .overlay{position:fixed;z-index:90}
+body.phone #alarm{padding:20px}
+body.phone .awrap .tm{font-size:58px}
+body.phone .wake .msn,body.phone .briefwrap,body.phone .typewrap,body.phone .swipewrap{width:100%;max-width:100%}
+body.phone .mathrow{flex-direction:column;gap:9px;width:100%}
+body.phone .mathq{width:100%}
+body.phone .patgrid{grid-template-columns:repeat(3,60px)}
+body.phone .patgrid button{height:60px}
 
 #root{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--rootBg);transition:background .6s}
 #stage{position:relative;width:1440px;height:900px;flex:none;padding:20px 24px 18px;display:grid;grid-template-rows:auto 1fr auto;gap:14px;background:var(--bg);color:var(--tx);overflow:hidden;transform-origin:center center;transition:background .6s,color .6s}
@@ -109,6 +172,13 @@ section.col{display:flex;flex-direction:column;gap:14px;min-height:0}
 .wxstat i{font-size:10px;letter-spacing:.1em;color:var(--tx3);font-style:normal;line-height:1.35}
 .wxstat b{font-size:16px;font-weight:400}
 .wxadvice{margin:12px 0 0;font-size:14px;line-height:1.55;color:var(--acc)}
+.tmrw{margin-top:12px;padding-top:11px;border-top:1px solid var(--bd);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tmrw .lb{font-size:10px;letter-spacing:.16em;color:var(--tx3)}
+.tmrw .ic{font-size:17px;color:var(--acc)}
+.tmrw .tp{font-size:15px}
+.tmrw .tp .lo{color:var(--acc)}
+.tmrw .rn{font-size:12.5px;color:var(--tx2)}
+.tmrw .rn b{color:var(--acc);font-weight:600}
 .hourly{margin-top:auto;padding-top:12px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;gap:6px}
 .hcell{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
 .hcell .t{font-size:11px;color:var(--tx3)}
@@ -120,6 +190,9 @@ section.col{display:flex;flex-direction:column;gap:14px;min-height:0}
 #quoteAuthor{display:block;margin-top:5px;font-size:11px;letter-spacing:.16em;color:var(--tx3)}
 
 #todoCard{flex:1 1 auto;min-height:0;padding:18px 22px;display:flex;flex-direction:column}
+.ttabs{display:flex;gap:4px;background:var(--chip);border-radius:999px;padding:3px}
+.ttabs button{padding:5px 14px;border-radius:999px;border:none;background:transparent;font-size:12px;color:var(--tx3);cursor:pointer}
+.ttabs button.on{background:var(--accSoft);color:var(--acc);font-weight:600}
 .todoadd{margin-top:11px;display:flex;align-items:center;gap:8px;padding:10px 13px;border-radius:12px;border:1px dashed var(--bd2);background:var(--chip)}
 .todoadd span{color:var(--acc);font-size:14px}
 .todoadd input{flex:1;background:transparent;border:none;font-size:15px;color:var(--tx)}
@@ -319,6 +392,7 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
           </div>
           <div class="wxstats" id="wxStats"></div>
           <p class="wxadvice" id="wxAdvice"></p>
+          <div class="tmrw" id="tmrw"></div>
           <div class="hourly" id="hourly"></div>
         </a>
 
@@ -330,7 +404,10 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
 
       <section class="col">
         <div class="card" id="todoCard">
-          <div class="rowb"><span class="lab" id="todoLabel">오늘 할 일</span><span style="font-size:12px;color:var(--acc)" id="todoCount"></span></div>
+          <div class="rowb">
+            <div class="ttabs"><button data-k="todos" class="on">오늘</button><button data-k="todosNext">내일</button></div>
+            <span style="font-size:12px;color:var(--acc)" id="todoCount"></span>
+          </div>
           <div class="todoadd"><span>+</span><input id="todoInput" placeholder="할 일을 적고 Enter" maxlength="90"></div>
           <div id="todoList"></div>
         </div>
@@ -348,7 +425,7 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
         <div class="card" id="sleepCard">
           <div class="rowb">
             <span class="lab" id="sleepLabelTop">수면 · XIAOMI WATCH</span>
-            <a href="intent://#Intent;package=com.mi.health;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.mi.health;end" style="font-size:11px;color:var(--acc)">Mi 피트니스 ↗</a>
+            <a id="miLink1" href="#" style="font-size:11px;color:var(--acc)">Mi 피트니스 ↗</a>
           </div>
           <div id="sleepFull">
             <div class="slnum"><b id="sleepScore">--</b><i id="sleepMeta"></i></div>
@@ -357,7 +434,7 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
           <div id="sleepEmpty">
             <p id="sleepAsk">어젯밤 수면 점수가 아직 없습니다.</p>
             <div class="sleepact">
-              <a class="mibtn" href="intent://#Intent;package=com.mi.health;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.mi.health;end">기록 보러 가기</a>
+              <a class="mibtn" id="miLink2" href="#">기록 보러 가기</a>
               <input id="sleepNum" type="number" min="0" max="100" placeholder="점수" inputmode="numeric">
               <button id="sleepSave">기록</button>
             </div>
@@ -436,7 +513,7 @@ footer{position:relative;padding:14px 0 13px;border-radius:22px;border:1px solid
 
 <script>
 /* ═════════ 저장 ═════════ */
-const BUILD='2026-08-14 · v22';
+const BUILD='2026-08-14 · v27';
 const KEY='morningBriefing.v4';
 let mem=null;
 const Store={
@@ -455,7 +532,7 @@ const DEF={
   lat:37.5271, lon:126.8656, place:'양천구 목동',
   kmaKey:'bCjXJ8p0rSCp1qYp%2Fyfl%2B%2FtrCNpFc0hhGCGLglIVNU17IoC9FtwNXFCWHyFFSvUnPJMoHZhCFS%2Bw8%2BNRZsBugw%3D%3D',
   sleep:null, sleepHist:{},
-  todos:[], todosNext:[], ddays:[{label:'생일',date:'2026-09-05'}],
+  todos:[], todosNext:[], ddays:[{label:'생일',date:'2026-09-05'}], phoneAll:false,
   tasks:[], lionsManual:{opp:'',time:'',place:'',sp:''}, lionsOff:false,
   syncProject:'', syncKey:'', syncCode:'taehyun-goodmorning', syncAt:0,
   games:[], gamesAt:0, day:'', dismissed:'', wx:null, news:null, newsAt:0
@@ -628,8 +705,8 @@ const THEME={
   '--scrim':'rgba(246,244,238,.82)','--modal':'linear-gradient(160deg,#ffffff,#f1eee6)','--alarmBg':'radial-gradient(70% 60% at 50% 34%,#fff6e4 0%,#f2ece0 72%)','--rootBg':'#f6f4ee'}
 };
 const isNight=()=> modeOverride ? modeOverride==='night' : (now.getHours()>=18||now.getHours()<5);
-// 밤 모드라도 자정을 넘으면(00~05시) "내일"이 곧 오늘이므로 오늘 데이터를 쓴다
-const dayOff=()=> (isNight() && now.getHours()>=18) ? 1 : 0;
+// 화면 색(밤/아침)과 무관하게 데이터는 항상 오늘 것 — 자정에만 바뀐다
+const dayOff=()=> 0;
 function applyTheme(){
   const t=THEME[isNight()?'night':'day'], r=document.documentElement.style;
   for(const k in t) r.setProperty(k,t[k]);
@@ -639,6 +716,10 @@ function fit(){
   const phone = innerWidth<740;
   document.body.classList.toggle('phone', phone);
   $('allBtn').style.display = phone?'inline-block':'none';
+  if(phone){
+    document.body.classList.toggle('showall', !!C.phoneAll);
+    $('allBtn').textContent = C.phoneAll?'간단히 보기':'전체 보기';
+  } else document.body.classList.remove('showall');
   if(phone){ $('stage').style.transform='none'; return; }
   const s=Math.min(innerWidth/1440, innerHeight/900);
   $('stage').style.transform=`scale(${s})`;
@@ -908,12 +989,16 @@ async function loadGames(force){
     const sd=raw[0]&&String(raw[0].gameDate||raw[0].gameDateTime||'');
     notes.push('경기 '+raw.length+'건 수신 · 날짜형식예시 "'+(sd||'?').slice(0,19)+'" (KBO만 필터 후 '+raw.filter(g=>{const c=String(g.categoryId||'').toLowerCase();return !c||c==='kbo';}).length+'건)');
     const T=g=>`${g.homeTeamName||''}${g.awayTeamName||''}${g.homeTeamCode||''}${g.awayTeamCode||''}`;
-    // KBO 1군만 — 퓨처스(2군)·시범경기 등 다른 카테고리 제외
     const isKbo=g=>{
       const c=String(g.categoryId||g.categoryName||'').toLowerCase();
       return !c || c==='kbo' || c==='케이비오';
     };
-    const mine=raw.filter(g=>isKbo(g)&&/삼성|SS|SAM/.test(T(g)));
+    const FUTURES=['경산','함평','이천','화성','강화','익산','상동','김해','서산','고양','문경','목동'];
+    const okPark=g=>{ const s=String(g.stadium||''); return !s || !FUTURES.some(x=>s.includes(x)); };
+    const TEAMS=['삼성','LG','두산','KIA','기아','롯데','한화','SSG','NC','KT','키움'];
+    const okTeam=g=>TEAMS.some(t=>String(g.homeTeamName||'').includes(t))
+                 && TEAMS.some(t=>String(g.awayTeamName||'').includes(t));
+    const mine=raw.filter(g=>isKbo(g)&&okPark(g)&&okTeam(g)&&/삼성|SS|SAM/.test(T(g)));
     C.games=mine.map(g=>{
       // '20260814' / '2026-08-14' / '2026-08-14T18:30' 어떤 형식이든 숫자 8자리로 정규화
       const d=String(g.gameDate||g.gameDateTime||'').replace(/\D/g,'').slice(0,8);
@@ -929,6 +1014,16 @@ async function loadGames(force){
         op:(home?g.awayTeamScore:g.homeTeamScore),
         done:/END|RESULT|FINAL|종료/i.test(String(g.statusCode||g.statusInfo||''))};
     }).filter(Boolean).sort((a,b)=>a.date.localeCompare(b.date));
+    // 하루 한 경기 — 중복이면 1군 구장 쪽 우선
+    const byDate={};
+    C.games.forEach(g=>{
+      const cur=byDate[g.date];
+      if(!cur){ byDate[g.date]=g; return; }
+      const sc=x=>(['잠실','고척','문학','수원','대전','대구','사직','창원','광주','울산','포항','청주']
+                   .some(p=>String(x.place||'').includes(p))?2:0)+(x.time?1:0);
+      if(sc(g)>sc(cur)) byDate[g.date]=g;
+    });
+    C.games=Object.values(byDate).sort((a,b)=>a.date.localeCompare(b.date));
     if(!mine.length){ notes.push('전체 '+raw.length+'건 중 삼성 경기 0건'); continue; }
     C.gamesAt=Date.now(); C.gamesFail=false; LASTSHAPE=notes.join(' | '); save(); paint(); return;
   }
@@ -1080,19 +1175,26 @@ function paint(){
   ];
   $('wxStats').innerHTML=st.map(s=>`<div class="wxstat"><i>${s[0]}</i><b style="color:${s[2]}">${s[1]}</b></div>`).join('');
   const t=w.temp;
-  $('wxAdvice').textContent = dayOff()
+  $('wxAdvice').textContent = false
     ? '내일 '+(w.rain>=50?(wetRanges(w.wetH)?wetRanges(w.wetH)+'에 비 소식이 있어요. 우산을 미리 챙겨 두세요.':'비 소식이 있어요. 우산을 미리 챙겨 두세요.'):t>=28?'덥습니다. 반팔에 얇은 셔츠로 준비해 두세요.':t>=17?'선선합니다. 긴팔 한 벌 꺼내 두세요.':'쌀쌀합니다. 겉옷을 미리 걸어 두세요.')
     : (t>=28?'반팔에 얇은 셔츠 한 장이면 충분합니다.':t>=23?'반팔, 저녁에는 가디건 한 장.':t>=17?'긴팔 셔츠가 적당합니다.':t>=10?'재킷은 꼭 챙기세요.':'코트와 목도리가 필요합니다.')+(w.rain>=50?(wetRanges(w.wetH)?' '+wetRanges(w.wetH)+'에 비, 우산을 챙기세요.':' 우산을 챙기세요.'):'');
+  // 내일 요약 (아침에도 미리 볼 수 있게 항상 표시)
+  const tw=C.wx&&C.wx.tomorrow;
+  $('tmrw').innerHTML = tw
+    ? `<span class="lb">내일</span><span class="ic">${WICON(tw.code)}</span>`
+      +`<span class="tp"><span class="lo">${tw.lo}°</span> / ${tw.hi}°</span>`
+      +`<span class="rn">${WDESC(tw.code)}${tw.rain!=null?' · 강수 <b>'+tw.rain+'%</b>':''}`
+      +`${wetRanges(tw.wetH)?' · '+wetRanges(tw.wetH):''}</span>`
+    : '';
   $('hourly').innerHTML=w.hourly.map(x=>`<div class="hcell"><span class="t">${x.t}</span><span class="i">${x.icon}</span><span class="v">${x.temp}°</span></div>`).join('');
 
   /* 할 일 */
-  const list=dayOff()?(C.todosNext||[]):(C.todos||[]);
-  $('todoLabel').textContent=dayOff()?'내일 할 일':'오늘 할 일';
-  $('todoInput').placeholder=dayOff()?'내일 할 일을 적고 Enter':'할 일을 적고 Enter';
+  const list=(C[todoTab]||[]);
+  $('todoInput').placeholder=todoTab==='todosNext'?'내일 할 일을 적고 Enter':'할 일을 적고 Enter';
   $('todoCount').textContent=`${list.filter(x=>!x.done).length} / ${list.length}`;
   $('todoList').innerHTML=list.length?list.map((t2,i)=>
     `<div class="todo ${t2.done?'done':''}" data-i="${i}"><button class="ck" data-a="t"></button><span class="tx" data-a="t">${esc(t2.text)}</span><button class="rm" data-a="r">×</button></div>`).join('')
-    :`<div style="padding:14px 4px;font-size:14px;color:var(--tx3);line-height:1.6">${dayOff()?'내일 할 일을 적어 두면 아침에 자동으로 넘어옵니다.':'적어 둔 할 일이 없습니다.'}</div>`;
+    :`<div style="padding:14px 4px;font-size:14px;color:var(--tx3);line-height:1.6">${todoTab==='todosNext'?'내일 할 일을 적어 두면 아침에 자동으로 넘어옵니다.':'적어 둔 할 일이 없습니다.'}</div>`;
 
   /* 수행평가 */
   $('taskList').innerHTML=(C.tasks||[]).slice().sort((a,b)=>a.date.localeCompare(b.date)).map((a,i)=>{
@@ -1244,7 +1346,14 @@ function last7Sleep(){
 }
 
 /* ═════════ 할 일 / 수행평가 이벤트 ═════════ */
-function curKey(){ return dayOff()?'todosNext':'todos'; }
+let todoTab='todos';
+function curKey(){ return todoTab; }
+$('todoCard').querySelector('.ttabs').onclick=e=>{
+  const btn=e.target.closest('button'); if(!btn) return;
+  todoTab=btn.dataset.k;
+  [...btn.parentNode.children].forEach(x=>x.classList.toggle('on', x===btn));
+  paint(); $('todoInput').focus();
+};
 $('todoInput').addEventListener('keydown',e=>{
   if(e.key!=='Enter') return;
   const v=e.target.value.trim(); if(!v) return;
@@ -1352,7 +1461,9 @@ $('modeBtn').onclick=()=>{
 };
 $('allBtn').onclick=()=>{
   const on=document.body.classList.toggle('showall');
+  C.phoneAll=on; save();
   $('allBtn').textContent=on?'간단히 보기':'전체 보기';
+  scrollTo({top:0,behavior:'smooth'});
 };
 $('sleepRange').addEventListener('input',e=>saveSleep(parseInt(e.target.value,10)));
 $('newsRefresh').onclick=()=>loadNews(true);
@@ -1471,6 +1582,7 @@ function stopAlarm(){
 }
 function renderMission(){
   const m=mstate, A=$('missionArea');
+  $('missionTitle').textContent=MTITLE[m.type]||'';
   if(m.type==='math'){
     A.innerHTML=`<div class="mathrow">${m.quiz.map((x,i)=>
       `<div class="mathq"><span>${x.q}</span><input inputmode="numeric" data-i="${i}" value="${m.ans[i]}" placeholder="답"></div>`).join('')}</div>`;
@@ -1524,6 +1636,35 @@ $('snoozeBtn').onclick=()=>{ stopAlarm(); snoozeAt=Date.now()+300000; };
 $('previewBtn').onclick=()=>startAlarm(true);
 document.addEventListener('click',()=>{ if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume(); },{once:true});
 
+/* ═════════ Mi 피트니스 열기 ═════════
+   안드로이드: 앱 실행(intent) → 없으면 플레이스토어
+   iOS: 앱 실행(스킴) 시도 → 실패하면 앱스토어 */
+const MI_PKG='com.xiaomi.wearable', MI_IOS='1493500777';
+function setupMiLinks(){
+  const ua=navigator.userAgent||'';
+  const isIOS=/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&'ontouchend' in document);
+  const isAndroid=/Android/i.test(ua);
+  const play='https://play.google.com/store/apps/details?id='+MI_PKG;
+  const store='https://apps.apple.com/kr/app/id'+MI_IOS;
+  [$('miLink1'),$('miLink2')].forEach(a=>{
+    if(!a) return;
+    if(isAndroid){
+      a.href='intent://#Intent;package='+MI_PKG+';S.browser_fallback_url='+encodeURIComponent(play)+';end';
+      a.removeAttribute('target');
+    } else if(isIOS){
+      a.href=store; a.target='_blank'; a.rel='noopener';
+      a.onclick=e=>{                               // 앱이 있으면 앱으로, 없으면 앱스토어
+        e.preventDefault();
+        const t=Date.now();
+        location.href='miwearable://';
+        setTimeout(()=>{ if(Date.now()-t<1600) open(store,'_blank','noopener'); },1200);
+      };
+    } else {                                        // PC 등 — 태블릿에서 볼 일이므로 플레이스토어
+      a.href=play; a.target='_blank'; a.rel='noopener';
+    }
+  });
+}
+
 /* ═════════ 부팅 ═════════ */
 function rollover(){
   const today=ymd(new Date());
@@ -1551,7 +1692,8 @@ async function boot(){
   importFromHash();
   if(!(C.sleepHist||{})[ymd(new Date())]) C.sleep=null;   // 워치 점수는 매일 새로 적는 값
   rollover();
-  fit(); addEventListener('resize',fit);
+  addEventListener('resize',fit); fit();
+  setupMiLinks();
   paint();
   loadWeather(); loadGames(false); loadNews(false);
   if(syncOn()){ syncPull(); setInterval(syncPull,45000); }
